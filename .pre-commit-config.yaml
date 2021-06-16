@@ -1,0 +1,114 @@
+# Python oriented pre-commit
+#
+# Note that the check-yaml argument does not work
+#
+# so only single document in a yaml file is allowed
+# tried dockerfilelint but too strict and disabling does not work
+---
+# python regex syntax for includsion
+# https://www.w3schools.com/python/python_regex.asp
+# files: ".py$"
+# This is only for python and other files
+exclude: "typescript|golang"
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.3.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-case-conflict
+      - id: check-builtin-literals
+      - id: check-executables-have-shebangs
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+      - id: check-symlinks
+      - id: check-toml
+      - id: detect-aws-credentials
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+      - id: trailing-whitespace
+
+  - repo: https://github.com/jumanjihouse/pre-commit-hooks
+    # temp fix for pre-commit breakage in shellcheck
+    # https://github.com/jumanjihouse/pre-commit-hooks/issues/82
+    rev: 2.1.5
+    hooks:
+      # as of Feb 2020, error with ruby 3.0
+      # https://github.com/jumanjihouse/pre-commit-hooks/issues/86
+      #- id: markdownlint
+      - id: shellcheck
+      - id: shfmt
+
+  # covidwa does not have of these standards so comment out
+
+  # https://ljvmiranda921.github.io/notebook/2018/06/21/precommits-using-black-and-flake8/
+  # https://github.com/pre-commit/mirrors-mypy
+  #- repo: https://github.com/pre-commit/mirrors-mypy
+  #  #rev: 'v0.782' will not run as of Feb 2020
+  #  rev: v0.812
+  #  hooks:
+  #    - id: mypy
+  #- repo: https://github.com/pycqa/flake8
+  #  rev: 3.8.4
+  #  hooks:
+  #    - id: flake8
+  # covidwa not using pydocstyle
+  #- repo: https://github.com/pycqa/pydocstyle
+  #  rev: 5.1.1
+  #  hooks:
+  #    - id: pydocstyle
+
+  ## puts the isort.cfg at the root we do not want that
+  ## https://pypi.org/project/seed-isort-config/
+  ## - repo: https://github.com/asottile/seed-isort-config
+  ##   rev: v2.2.0
+  ##   hooks:
+  ##     # remember this will place things at the root of the repo
+  ##     # but running in lint locally places it in the current directory
+  ##    - id: seed-isort-config
+  ## does not respect the local arguments
+  ## - repo: https://github.com/timothycrosley/isort
+  ##   rev: 5.2.0
+  ##   hooks:
+  ##     - id: isort
+  ##       args: [--profile=black, -w 79]
+  ## https://ljvmiranda921.github.io/notebook/2018/06/21/precommits-using-black-and-flake8/
+
+  #- repo: https://github.com/psf/black
+  #  rev: 20.8b1
+  #  hooks:
+  #    - id: black
+  #      language_version: python3.9
+  #      args: [-l 79]
+  # check shell scripts you check in
+  - repo: git://github.com/detailyang/pre-commit-shell
+    rev: v1.0.6
+    hooks:
+      - id: shell-lint
+        args: [--format=json]
+
+  # https://stackoverflow.com/questions/64011304/running-pytest-as-a-pre-commit-hook-no-such-file-or-directory-issue
+  # note this means pre-commit should run in your venv or conda
+  - repo: local
+    hooks:
+      # check the current working directory run by calling the id
+      #- id: testing
+      #  # the friendly name
+      #  name: Test Local
+      #  # this has to be a single executable so use bash -c to run scripts
+      #  entry: bash -c "cd python && pwd"
+        #language: system
+        #verbose: true
+        #pass_filenames: false
+        #always_run: true
+      - id: pytest
+        name: Python Linting
+        entry: bash -c "cd python && pytest --timeout=600 --ignore=lambda_stage --doctest-modules --cov=."
+        #args: [--timeout=600, --ignore=lambda_stage, --doctest-modules, --cov=.]
+        language: system
+        pass_filenames: false
+        always_run: true
+        verbose: true

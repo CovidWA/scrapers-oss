@@ -1,0 +1,51 @@
+Location,ApiURL,Owner,Template,Type,Calendar,NumDays,CalendarId,Key,URL
+Family Care Network - Bellingham Bay Family Medicine,https://fcncovidvaccinescheduling.as.me/schedule.php?,20599054,weekly,19592309,5008633,3,,fcn_bellingham_bay_family_medicine,https://fcncovidvaccinescheduling.as.me/schedule.php
+Family Care Network - Bellingham Drive Thru,https://fcncovidvaccinescheduling.as.me/schedule.php?,20599054,weekly,19592309,4427029,5,,fcn_bellingham_drive_thru,https://fcncovidvaccinescheduling.as.me/schedule.php
+Family Care Network - Bellingham Drive Thru (Johnson & Johnson),https://fcncovidvaccinescheduling.as.me/schedule.php?,20599054,weekly,21048746,5231104,5,,fcn_bellingham_drive_thru_jnj,https://fcncovidvaccinescheduling.as.me/schedule.php
+Family Care Network - Birch Bay Family Medicine,https://fcncovidvaccinescheduling.as.me/schedule.php?,20599054,weekly,19592309,4971658,3,,fcn_birch_bay_family_medicine,https://fcncovidvaccinescheduling.as.me/schedule.php
+Family Care Network - Family Health Associates,https://fcncovidvaccinescheduling.as.me/schedule.php?,20599054,weekly,19592309,4953840,3,,fcn_family_health_associates,https://fcncovidvaccinescheduling.as.me/schedule.php
+Family Care Network - Ferndale Family Medical Center,https://fcncovidvaccinescheduling.as.me/schedule.php?,20599054,weekly,19592309,4971704,3,,fcn_ferndale_family_medical_center,https://fcncovidvaccinescheduling.as.me/schedule.php
+Family Care Network - Island Family Physicians,https://fcncovidvaccinescheduling.as.me/schedule.php?,20599054,weekly,19592309,4971738,3,,fcn_island_family_physicians,https://fcncovidvaccinescheduling.as.me/schedule.php
+Family Care Network - Lynden Family Medicine,https://fcncovidvaccinescheduling.as.me/schedule.php?,20599054,weekly,19592309,4971689,3,,fcn_lynden_family_medicine,https://fcncovidvaccinescheduling.as.me/schedule.php
+Family Care Network - North Cascade Family Physicians,https://fcncovidvaccinescheduling.as.me/schedule.php?,20599054,weekly,19592309,4971724,3,,fcn_north_cascade_family_physicians,https://fcncovidvaccinescheduling.as.me/schedule.php
+Family Care Network - North Sound Family Medicine,https://fcncovidvaccinescheduling.as.me/schedule.php?,20599054,weekly,19592309,4953892,3,,fcn_north_sound_family_medicine,https://fcncovidvaccinescheduling.as.me/schedule.php
+Family Care Network - Squalicum Family Medicine,https://fcncovidvaccinescheduling.as.me/schedule.php?,20599054,weekly,19592309,4953909,3,,fcn_squalicum_family_medicine,https://fcncovidvaccinescheduling.as.me/schedule.php
+Family Care Network - Whatcom Family Medicine,https://fcncovidvaccinescheduling.as.me/schedule.php?,20599054,weekly,19592309,4953924,3,,fcn_whatcom_family_medicine,https://fcncovidvaccinescheduling.as.me/schedule.php
+Kusler's Pharmacy,https://kuslers.as.me/schedule.php?,21581128,weekly,19270651,4922775,3,,kuslers_pharmacy,https://www.kuslerspharmacy.net/
+Saar's Pharmacy - Parkland,https://app.acuityscheduling.com/schedule.php?,21923194,weekly,20141720,5365478,5,,saars_parkland,https://www.saarssupersaverfoods.com/
+Saar's Pharmacy - Bremerton,https://app.acuityscheduling.com/schedule.php?,21923194,weekly,20141720,5059131,5,,saars_bremerton,https://www.saarssupersaverfoods.com/
+Saar's Pharmacy - Oak Harbor,https://app.acuityscheduling.com/schedule.php?,21923194,weekly,20141720,5065594,5,,saars_oakharbor,https://www.saarssupersaverfoods.com/
+Yokes Pharmacy - Kellogg (1st Dose Moderna),https://app.acuityscheduling.com/schedule.php?,21573064,weekly,19248879,4895190,3,,yokes_kellogg_moderna1,https://app.acuityscheduling.com/schedule.php?owner=21573064
+Yokes Pharmacy - Liberty Lake (1st Dose Moderna),https://app.acuityscheduling.com/schedule.php?,21573064,weekly,19248879,4895127,3,,yokes_liberty_lake_moderna1,https://app.acuityscheduling.com/schedule.php?owner=21573064
+Yokes Pharmacy - Kennewick (1st Dose Moderna),https://app.acuityscheduling.com/schedule.php?,21573064,weekly,19248879,4895117,3,,yokes_kennewick_moderna1,https://app.acuityscheduling.com/schedule.php?owner=21573064
+Yokes Pharmacy - Pasco (1st Dose Moderna),https://app.acuityscheduling.com/schedule.php?,21573064,weekly,19248879,4895071,3,,yokes_pasco_moderna1,https://app.acuityscheduling.com/schedule.php?owner=21573064
+Yokes Pharmacy - Liberty Lake (2nd Dose Moderna),https://app.acuityscheduling.com/schedule.php?,21573064,weekly,19256325,5398881,3,,yokes_liberty_lake_moderna2,https://app.acuityscheduling.com/schedule.php?owner=21573064
+Yokes Pharmacy - Latah Creek (2nd Dose Moderna),https://app.acuityscheduling.com/schedule.php?,21573064,weekly,19256325,4895141,3,,yokes_latah_creek_moderna2,https://app.acuityscheduling.com/schedule.php?owner=21573064
+Yokes Pharmacy - Pasco (2nd Dose Moderna),https://app.acuityscheduling.com/schedule.php?,21573064,weekly,19256325,5458600,3,,yokes_pasco_moderna2,https://app.acuityscheduling.com/schedule.php?owner=21573064
+Yokes Pharmacy - Deer Park (2nd Dose Moderna),https://app.acuityscheduling.com/schedule.php?,21573064,weekly,19256325,4895193,3,,yokes_deer_park_moderna2,https://app.acuityscheduling.com/schedule.php?owner=21573064
+Yokes Pharmacy - Liberty Lake (J&J),https://app.acuityscheduling.com/schedule.php?,21573064,weekly,21571682,5458057,3,,yokes_libery_lake_jnj,https://app.acuityscheduling.com/schedule.php?owner=21573064
+Yokes Pharmacy - Airway Heights (J&J),https://app.acuityscheduling.com/schedule.php?,21573064,weekly,21571682,4895199,3,,yokes_airway_heights_jnj,https://app.acuityscheduling.com/schedule.php?owner=21573064
+Yokes Pharmacy - Spokane Valley (J&J),https://app.acuityscheduling.com/schedule.php?,21573064,weekly,21571682,4895134,3,,yokes_spokane_valley_jnj,https://app.acuityscheduling.com/schedule.php?owner=21573064
+Yokes Pharmacy - Foothills (J&J),https://app.acuityscheduling.com/schedule.php?,21573064,weekly,21571682,4895180,5,,yokes_foothills_jnj,https://app.acuityscheduling.com/schedule.php?owner=21573064
+Yokes Pharmacy - Indian Trail (J&J),https://app.acuityscheduling.com/schedule.php?,21573064,weekly,21571682,5463541,5,,yokes_indian_trail_jnj,https://app.acuityscheduling.com/schedule.php?owner=21573064
+Yokes Pharmacy - Latah Creek (J&J),https://app.acuityscheduling.com/schedule.php?,21573064,weekly,21571682,5330123,5,,yokes_latah_creek_jnj,https://app.acuityscheduling.com/schedule.php?owner=21573064
+Yokes Pharmacy - South Richland (J&J),https://app.acuityscheduling.com/schedule.php?,21573064,weekly,21571682,4895287,5,,yokes_south_richland_jnj,https://app.acuityscheduling.com/schedule.php?owner=21573064
+Yokes Pharmacy - Deer Park (J&J),https://app.acuityscheduling.com/schedule.php?,21573064,weekly,21571682,5458524,5,,yokes_deer_park_jnj,https://app.acuityscheduling.com/schedule.php?owner=21573064
+Yokes Pharmacy - Argonne Village (J&J),https://app.acuityscheduling.com/schedule.php?,21573064,weekly,21571682,4895061,5,,yokes_argonne_village_jnj,https://app.acuityscheduling.com/schedule.php?owner=21573064
+Yokes Pharmacy - Mead (J&J),https://app.acuityscheduling.com/schedule.php?,21573064,weekly,21648893,4895055,5,,yokes_mead_jnj,https://app.acuityscheduling.com/schedule.php?owner=21573064
+Horizon Pharmacy (Pfizer),https://vaccine-horizonpharmacy-wapato.as.me/schedule.php,21846543,monthly,21304415,5197901,5,,horizon_pharmacy_pfizer,https://vaccine-horizonpharmacy-wapato.as.me/schedule.php
+Horizon Pharmacy (J&J),https://vaccine-horizonpharmacy-wapato.as.me/schedule.php,21846543,monthly,21933036,5393425,5,,horizon_pharmacy_jnj,https://vaccine-horizonpharmacy-wapato.as.me/schedule.php
+Pharmaca Integrated Pharmacy - Wallingford,https://pharmaca.as.me/schedule.php?,20105611,weekly,20894890,4350225,5,,pharmaca_wallingford,https://pharmaca.as.me/wallingford
+Pharmaca Integrated Pharmacy - Madison Park,https://pharmaca.as.me/schedule.php?,20105611,weekly,20894890,4350221,5,,pharmaca_madison_park,https://pharmaca.as.me/madisonpark
+Pharmaca Integrated Pharmacy - Redmond,https://pharmaca.as.me/schedule.php?,20105611,weekly,20894890,4489970,5,,pharmaca_redmond,https://pharmaca.as.me/redmond
+Pharmaca Integrated Pharmacy - West Seattle,https://pharmaca.as.me/schedule.php?,20105611,weekly,20894890,4350219,5,,pharmaca_west_seattle,https://pharmaca.as.me/westseattle
+Laketown Pharmacy,https://app.acuityscheduling.com/schedule.php?,22376117,weekly,21265523,5264039,5,,laketown_pharmacy,https://www.laketownpharmacy.com/covid-19-information
+Sid's Pharmacy,https://sidspharmacy.as.me/schedule.php?appointmentType=21452580,22408519,weekly,22343284,5438958,5,,sids_pharmacy_pullman,http://sidspharmacy.com
+Lopez Island Pharmacy,https://app.acuityscheduling.com/schedule.php?,21711065,weekly,19787962,5030333,5,,lopez_island_pharmacy,https://lopezislandpharmacy.com/
+Pharm-A-Save Granite Falls Moderna Dose 1,https://app.acuityscheduling.com/schedule.php?,21968067,weekly,20429462,5114674,3,5114674,pharm_a_save_granite_falls_moderna1,https://www.pharmasavegranitefalls.com/
+Pharm-A-Save Granite Falls Moderna Dose 2,https://app.acuityscheduling.com/schedule.php?,21968067,weekly,20429467,5326287,3,5114674,pharm_a_save_granite_falls_moderna2,https://www.pharmasavegranitefalls.com/
+Pharm-A-Save Granite Falls J&J,https://app.acuityscheduling.com/schedule.php?,21968067,weekly,21658271,5326616,3,5114674,pharm_a_save_granite_falls_jnj,https://www.pharmasavegranitefalls.com/
+Rosauers - North Division,https://app.acuityscheduling.com/schedule.php?,21856125,weekly,19974422,5030549,5,,rosauers_north_division,https://www.rosauers.com/pharmacy/
+Duvall Family Drugs Moderna Dose 1,https://app.acuityscheduling.com/schedule.php?,21968067,weekly,20250677,5080602,5,,duvall_family_drugs_moderna1,https://www.duvallfamilydrugs.com/
+Duvall Family Drugs Moderna Dose 2,https://app.acuityscheduling.com/schedule.php?,21968067,weekly,20428958,5326329,5,,duvall_family_drugs_moderna2,https://www.duvallfamilydrugs.com/
+Duvall Family Drugs J&J,https://app.acuityscheduling.com/schedule.php?,21968067,weekly,21801613,5355622,5,,duvall_family_drugs_jnj,https://www.duvallfamilydrugs.com/

@@ -1,0 +1,7 @@
+build
+config.json
+dockersecrets.sh
+dump
+node_modules
+mhealth_credentials.json
+*.js

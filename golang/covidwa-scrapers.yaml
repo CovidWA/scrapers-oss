@@ -1,0 +1,1659 @@
+---
+debug: true # additional debug output
+test_mode: false # if set to true no api calls will be made to covidwa
+poll_interval: 30 # default scrape interval (seconds)
+api_interval: 180 # interval to send updates to the covidwa api.  Note that any detected changes in status will trigger an update immediately.
+api_url: "https://api.covidwa.com/v1/updater"
+api_internal_url: "https://api.covidwa.com/v1/get_internal"
+from_email_address: "" # from address field for notification emails
+smtp_host: "" # smtp info for notification emails
+smtp_port: 587
+smtp_user: ""
+smtp_pass: ""
+error_warning_threshold: 3 # when error count exceeds this, send email
+notify_email_addrs:
+  - "email1@gmail.com" # list of emails to notify for changes/errors
+  - "email2@gmail.com"
+notify_on_change: true # send email notification when status changes
+notify_on_error: true # send email notification when there are n errors in a row (configured in error_warning_threshold)
+dump_output: true # output unique scrape results to file
+dump_output_s3: true # send unique scrape results to s3
+dump_dir: "out" # directory to dump scraper html/json/xml output, this must be configured
+limited_threshold: 5 #default number of appointments above which the scraper should return available instead of limited
+scraper_configs:
+  # kadlec_benton:
+  #   type: "multistage_regexp" #options are standard_regexp, standard_hash, standard_header, multistage_regexp, kroger, or solv
+  #   api_key: "kadlec_benton" #covidwa airtable key
+  #   min_scrape_interval: 90 # custom scrape interval, if longer than the default configured in poll_interval
+  #   params:
+  #     stages: # multistage scraper - stages are checked in order with the next stage's url formed with contents of the previous stage
+  #       - endpoint:
+  #           url: 'https://providencecovidvaccinewamt.squarespace.com/kadlec'
+  #           method: "GET"
+  #         unavailable_regexp: '(?i)(>\s*no[^>]+available[^>]*</a>)|(>appointment[^>]+full[^>]*</a>)'
+  #         next_url_regexp: '(?i)https://forms.office.com[^"]+'
+  #       - endpoint:
+  #           url: "##PREVIOUS##"
+  #           method: "GET"
+  #         next_url_regexp: '(?i)https://forms.office.com/formapi/api/[^"]+'
+  #       - endpoint:
+  #           url: "##PREVIOUS##"
+  #           method: "GET"
+  #         recursion_type: "any"
+  #         next_url_regexp: '(?i)https://www.signupgenius.com/[a-z0-9/-]+'
+  #       - endpoint:
+  #           url: '##PREVIOUS##'
+  #           method: "GET"
+  #         unavailable_regexp: '(?i)(>NO SLOTS AVAILABLE. SIGN UP IS FULL.</h1>)|(<title>Oops! An Error.</title>)|(>The Sign Up Was Not Found<)|(sign up period for this event has ended)' #regexp pattern for no appointments
+  #         available_regexp: '(?i)<input type="submit" value="Submit and Sign Up" class="giantsubmitbutton rounded link_cursor">' #regexp pattern for available appointments, this field is optional.  if available pattern isn't found and the unavailable pattern does not match, site will be marked as possible
+  # kadlec_franklin:
+  #   type: "multistage_regexp"
+  #   api_key: "kadlec_franklin_county"
+  #   min_scrape_interval: 90
+  #   params:
+  #     stages:
+  #       - endpoint:
+  #           url: 'https://providencecovidvaccinewamt.squarespace.com/kadlec'
+  #           method: "GET"
+  #         unavailable_regexp: '(?i)(>\s*no[^>]+available[^>]*</a>)|(>appointment[^>]+full[^>]*</a>)'
+  #         next_url_regexp: '(?i)https://forms.office.com[^"]+'
+  #       - endpoint:
+  #           url: "##PREVIOUS##"
+  #           method: "GET"
+  #         next_url_regexp: '(?i)https://forms.office.com/formapi/api/[^"]+'
+  #       - endpoint:
+  #           url: "##PREVIOUS##"
+  #           method: "GET"
+  #         recursion_type: "any"
+  #         next_url_regexp: '(?i)https://www.signupgenius.com/[a-z0-9/-]+'
+  #       - endpoint:
+  #           url: '##PREVIOUS##'
+  #           method: "GET"
+  #         unavailable_regexp: '(?i)(>NO SLOTS AVAILABLE. SIGN UP IS FULL.</h1>)|(<title>Oops! An Error.</title>)|(>The Sign Up Was Not Found<)|(sign up period for this event has ended)' #regexp pattern for no appointments
+  #         available_regexp: '(?i)<input type="submit" value="Submit and Sign Up" class="giantsubmitbutton rounded link_cursor">' #regexp pattern for available appointments, this field is optional.  if available pattern isn't found and the unavailable pattern does not match, site will be marked as possible
+  dunia_seattle:
+    type: "standard_regexp"
+    api_key: "dunia_seattle"
+    params:
+      endpoint:
+        url: 'https://api.zocdoc.com/directory/v2/gql'
+        method: 'POST'
+        body: '{"operationName":"providerLocationsAvailability","variables":{"directoryId":"-1","insurancePlanId":"-1","isNewPatient":true,"jumpAhead":true,"numDays":14,"procedureId":"5243","searchRequestId":"6cbd9380-1e26-4c16-851d-16a898a8b80a","timeFilter":"AnyTime","firstAvailabilityMaxDays":21,"providerLocationIds":["pr_TGIPt-YoSU28UR7NIhKfaB|lo_5nUvmuarA0-KSHhJY4_RUR"]},"query":"query providerLocationsAvailability($directoryId: String, $insurancePlanId: String, $isNewPatient: Boolean, $isReschedule: Boolean, $jumpAhead: Boolean, $firstAvailabilityMaxDays: Int, $numDays: Int, $procedureId: String, $providerLocationIds: [String], $searchRequestId: String, $startDate: String, $timeFilter: TimeFilter, $widget: Boolean) {\n  providerLocations(ids: $providerLocationIds) {\n    id\n    ...availability\n    __typename\n  }\n}\n\nfragment availability on ProviderLocation {\n  id\n  provider {\n    id\n    monolithId\n    __typename\n  }\n  location {\n    id\n    monolithId\n    state\n    phone\n    __typename\n  }\n  availability(directoryId: $directoryId, insurancePlanId: $insurancePlanId, isNewPatient: $isNewPatient, isReschedule: $isReschedule, jumpAhead: $jumpAhead, firstAvailabilityMaxDays: $firstAvailabilityMaxDays, numDays: $numDays, procedureId: $procedureId, searchRequestId: $searchRequestId, startDate: $startDate, timeFilter: $timeFilter, widget: $widget) {\n    times {\n      date\n      timeslots {\n        isResource\n        startTime\n        __typename\n      }\n      __typename\n    }\n    firstAvailability {\n      startTime\n      __typename\n    }\n    showGovernmentInsuranceNotice\n    timesgridId\n    today\n    __typename\n  }\n  __typename\n}\n"}'
+        headers:
+          Content-Type: 'application/json'
+      available_regexp: 'timeslots":\[{"isResource":false,"startTime":"'
+      unavailable_regexp: '"firstAvailability":null'
+      num_appts_regexp: '"startTime":'
+  zocdoc_medarts_bellevue:
+    type: "standard_regexp"
+    api_key: "zocdoc_medarts_bellevue"
+    params:
+      endpoint:
+        url: 'https://api.zocdoc.com/directory/v2/gql'
+        method: 'POST'
+        body: '{"operationName":"providerLocationsAvailability","variables":{"directoryId":"-1","insurancePlanId":"-1","isNewPatient":true,"jumpAhead":true,"numDays":14,"procedureId":"5243","searchRequestId":"a7c60ca3-dd5e-4985-ab1d-cabb38f4b70d","timeFilter":"AnyTime","firstAvailabilityMaxDays":21,"providerLocationIds":["pr_SnbUXYIV90GwUOXEAEYWFx|lo_BGwEWA8aDUSsG7JfkJuOIR"]},"query":"query providerLocationsAvailability($directoryId: String, $insurancePlanId: String, $isNewPatient: Boolean, $isReschedule: Boolean, $jumpAhead: Boolean, $firstAvailabilityMaxDays: Int, $numDays: Int, $procedureId: String, $providerLocationIds: [String], $searchRequestId: String, $startDate: String, $timeFilter: TimeFilter, $widget: Boolean) {\n  providerLocations(ids: $providerLocationIds) {\n    id\n    ...availability\n    __typename\n  }\n}\n\nfragment availability on ProviderLocation {\n  id\n  provider {\n    id\n    monolithId\n    __typename\n  }\n  location {\n    id\n    monolithId\n    state\n    phone\n    __typename\n  }\n  availability(directoryId: $directoryId, insurancePlanId: $insurancePlanId, isNewPatient: $isNewPatient, isReschedule: $isReschedule, jumpAhead: $jumpAhead, firstAvailabilityMaxDays: $firstAvailabilityMaxDays, numDays: $numDays, procedureId: $procedureId, searchRequestId: $searchRequestId, startDate: $startDate, timeFilter: $timeFilter, widget: $widget) {\n    times {\n      date\n      timeslots {\n        isResource\n        startTime\n        __typename\n      }\n      __typename\n    }\n    firstAvailability {\n      startTime\n      __typename\n    }\n    showGovernmentInsuranceNotice\n    timesgridId\n    today\n    __typename\n  }\n  __typename\n}\n"}'
+        headers:
+          Content-Type: 'application/json'
+      available_regexp: 'timeslots":\[{"isResource":false,"startTime":"'
+      unavailable_regexp: '"firstAvailability":null'
+      num_appts_regexp: '"startTime":'    
+  select_family_bonney:
+    type: "standard_regexp"
+    api_key: "select_family_bonney"
+    params:
+      endpoint:
+        url: 'https://api.zocdoc.com/directory/v2/gql'
+        method: 'POST'
+        body: '{"operationName":"providerLocationsAvailability","variables":{"directoryId":"-1","insurancePlanId":"-1","isNewPatient":true,"jumpAhead":true,"numDays":14,"procedureId":"5243","searchRequestId":"84a3fd4e-ba7c-43b6-9e93-98d416c6b57b","timeFilter":"AnyTime","firstAvailabilityMaxDays":30,"providerLocationIds":["pr_jS-2Yxu4B0SDDrJJUSFCBh|lo_3ZmaBcByG0ah4L-Pybu09x"]},"query":"query providerLocationsAvailability($directoryId: String, $insurancePlanId: String, $isNewPatient: Boolean, $isReschedule: Boolean, $jumpAhead: Boolean, $firstAvailabilityMaxDays: Int, $numDays: Int, $procedureId: String, $providerLocationIds: [String], $searchRequestId: String, $startDate: String, $timeFilter: TimeFilter, $widget: Boolean) {\n  providerLocations(ids: $providerLocationIds) {\n    id\n    ...availability\n    __typename\n  }\n}\n\nfragment availability on ProviderLocation {\n  id\n  provider {\n    id\n    monolithId\n    __typename\n  }\n  location {\n    id\n    monolithId\n    state\n    phone\n    __typename\n  }\n  availability(directoryId: $directoryId, insurancePlanId: $insurancePlanId, isNewPatient: $isNewPatient, isReschedule: $isReschedule, jumpAhead: $jumpAhead, firstAvailabilityMaxDays: $firstAvailabilityMaxDays, numDays: $numDays, procedureId: $procedureId, searchRequestId: $searchRequestId, startDate: $startDate, timeFilter: $timeFilter, widget: $widget) {\n    times {\n      date\n      timeslots {\n        isResource\n        startTime\n        __typename\n      }\n      __typename\n    }\n    firstAvailability {\n      startTime\n      __typename\n    }\n    showGovernmentInsuranceNotice\n    timesgridId\n    today\n    __typename\n  }\n  __typename\n}\n"}'
+        headers:
+          Content-Type: 'application/json'
+      available_regexp: 'timeslots":\[{"isResource":false,"startTime":"'
+      unavailable_regexp: '"firstAvailability":null'
+      num_appts_regexp: '"startTime":'
+  providence_walla_walla:
+    type: "standard_regexp"
+    api_key: "providence_walla_walla"
+    min_scrape_interval: 90
+    params:
+      unavailable_regexp: '.*>Appointments Full</a>.*'
+      endpoint:
+        url: 'https://providencecovidvaccinewamt.squarespace.com/wallawalla'
+        method: "GET"
+  providence_lewis:
+    type: "standard_regexp"
+    api_key: "providence_lewis"
+    min_scrape_interval: 90
+    params:
+      unavailable_regexp: '.*>No Clinics Currently Available</a>.*'
+      endpoint:
+        url: 'https://providencecovidvaccinewamt.squarespace.com/southwestwa'
+        method: "GET"
+  providence_thurston:
+    type: "standard_regexp"
+    api_key: "providence_thurston"
+    min_scrape_interval: 90
+    params:
+      unavailable_regexp: '.*>No Clinics Currently Available</a>.*'
+      endpoint:
+        url: 'https://providencecovidvaccinewamt.squarespace.com/southwestwa'
+        method: "GET"
+  # providence_spokane:
+  #   type: "multistage_regexp"
+  #   api_key: "providence_spokane"
+  #   min_scrape_interval: 90
+  #   params:
+  #     stages:
+  #       - endpoint:
+  #           url: 'https://providencecovidvaccinewamt.squarespace.com/spokane'
+  #           method: "GET"
+  #         recursion_type: "any"
+  #         next_url_regexp: 'href="(https://www.signupgenius.com[^"]+pmp[^"]*)"'
+  #         unavailable_regexp: '(?i)(Link Coming Soon)'
+  #       - endpoint:
+  #           url: '##PREVIOUS##'
+  #           method: "GET"
+  #         unavailable_regexp: '(>NO SLOTS AVAILABLE. SIGN UP IS FULL.</h1>)|(<title>Oops! An Error.</title>)|(>The Sign Up Was Not Found<)||(sign up period for this event has ended)'
+  #         available_regexp: '.*<input type="submit" value="Submit and Sign Up".*'
+  # providence_spokane_teachhc:
+  #   type: "multistage_regexp"
+  #   api_key: "providence_spokane_teachhc"
+  #   min_scrape_interval: 90
+  #   params:
+  #     stages:
+  #       - endpoint:
+  #           url: 'https://providencecovidvaccinewamt.squarespace.com/spokane'
+  #           method: "GET"
+  #         recursion_type: "any"
+  #         next_url_regexp: 'href="(https://www.signupgenius.com[^"]+thc[^"]*)"'
+  #         unavailable_regexp: '(?i)(Link Coming Soon)'
+  #       - endpoint:
+  #           url: '##PREVIOUS##'
+  #           method: "GET"
+  #         unavailable_regexp: '(>NO SLOTS AVAILABLE. SIGN UP IS FULL.</h1>)|(<title>Oops! An Error.</title>)|(>The Sign Up Was Not Found<)||(sign up period for this event has ended)'
+  #         available_regexp: '.*<input type="submit" value="Submit and Sign Up".*'
+  providence_spokane_gonzaga:
+    type: "multistage_regexp"
+    api_key: "providence_spokane_gonzaga"
+    min_scrape_interval: 90
+    params:
+      stages:
+        - endpoint:
+            url: 'https://providencecovidvaccinewamt.squarespace.com/spokane'
+            method: "GET"
+          recursion_type: "any"
+          next_url_regexp: 'href="(https://www.signupgenius.com/go/[0-9a-z\-]+)"'
+          unavailable_regexp: '(?i)(Link Coming Soon)'
+        - endpoint:
+            url: '##PREVIOUS##'
+            method: "GET"
+          unavailable_regexp: '(>NO SLOTS AVAILABLE. SIGN UP IS FULL.</h1>)|(<title>Oops! An Error.</title>)|(>The Sign Up Was Not Found<)||(sign up period for this event has ended)'
+          available_regexp: '.*<input type="submit" value="Submit and Sign Up".*'
+  whidbey_health_medical_center_pfizer:
+    type: "standard_regexp"
+    api_key: "whidbey_health_medical_center_pfizer"
+    params:
+      endpoint:
+        url: "https://book.appointment-plus.com/book-appointment/get-grid-hours?startTimestamp=##CURRENT_DATE##+00%3A00%3A00&endTimestamp=##NEXTMONTH_DATE##+00%3A00%3A00&limitNumberOfDaysWithOpenSlots=4&employeeId=4367&services%5B%5D=3365&numberOfSpotsNeeded=1&isStoreHours=true&clientMasterId=410621&toTimeZone=&fromTimeZone=132&_=##CURRENT_TIMESTAMP##"
+        method: "GET"
+      available_regexp: 'numberOfSpots'
+      unavailable_regexp: '"data":{"gridHours":\[\],"storeHours":\[\]}}'
+      num_appts_regexp: '"numberOfSpots":\[([\d,]+)\]' #if the regex has a capture group, try to parse as numbers (or lists of numbers) and sum
+      num_appts_taken_regexp: '"numberOfSpotsTaken":\[([\d,]+)\]' #these are "negative" appointments
+  whidbey_health_medical_center_moderna:
+    type: "standard_regexp"
+    api_key: "whidbey_health_medical_center_moderna"
+    params:
+      endpoint:
+        url: "https://book.appointment-plus.com/book-appointment/get-grid-hours?startTimestamp=##CURRENT_DATE##+00%3A00%3A00&endTimestamp=##NEXTMONTH_DATE##+00%3A00%3A00&limitNumberOfDaysWithOpenSlots=4&employeeId=4367&services%5B%5D=4215&numberOfSpotsNeeded=1&isStoreHours=true&clientMasterId=410621&toTimeZone=&fromTimeZone=132&_=##CURRENT_TIMESTAMP##"
+        method: "GET"
+      available_regexp: 'numberOfSpots'
+      unavailable_regexp: '"data":{"gridHours":\[\],"storeHours":\[\]}}'
+      num_appts_regexp: '"numberOfSpots":\[([\d,]+)\]' #if the regex has a capture group, try to parse as numbers (or lists of numbers) and sum
+      num_appts_taken_regexp: '"numberOfSpotsTaken":\[([\d,]+)\]' #these are "negative" appointments      
+  whidbey_health_trinity_lutheran_moderna:
+    type: "standard_regexp"
+    api_key: "whidbey_health_trinity_lutheran_moderna"
+    params:
+      endpoint:
+        url: "https://book.appointment-plus.com/book-appointment/get-grid-hours?startTimestamp=##CURRENT_DATE##+00%3A00%3A00&endTimestamp=##NEXTMONTH_DATE##+00%3A00%3A00&limitNumberOfDaysWithOpenSlots=4&employeeId=6345&services%5B%5D=4215&numberOfSpotsNeeded=1&isStoreHours=true&clientMasterId=410621&toTimeZone=&fromTimeZone=132&_=##CURRENT_TIMESTAMP##"
+        method: "GET"
+      available_regexp: 'numberOfSpots'
+      unavailable_regexp: '"data":{"gridHours":\[\],"storeHours":\[\]}}'
+      num_appts_regexp: '"numberOfSpots":\[([\d,]+)\]' #if the regex has a capture group, try to parse as numbers (or lists of numbers) and sum
+      num_appts_taken_regexp: '"numberOfSpotsTaken":\[([\d,]+)\]' #these are "negative" appointments  
+  tpchd_lakewood:
+    type: "standard_regexp"
+    api_key: "tpchd_lakewood"
+    params:
+      endpoint:
+        url: "https://rrtestingtacoma.as.me/schedule.php?action=showCalendar&fulldate=1&owner=22890993&template=weekly"
+        method: "POST"
+        body: "type=22673025&calendar=5487866&skip=true&options%5Bqty%5D=1&options%5BnumDays%5D=5&ignoreAppointment=&appointmentType=&calendarID="
+        headers:
+          Content-Type: "application/x-www-form-urlencoded"
+      unavailable_regexp: 'data-original-text="No times are available"'
+      available_regexp: 'choose-time'
+      num_appts_regexp: '(?i)<label role\=[''"]radio[''"] data-qa\=[''"]select_appt[''"]' #if the regex has no capture group, just count number of matches
+  schaffner_skagit:
+    type: "standard_regexp"
+    api_key: "schaffner_skagit"
+    params:
+      endpoint:
+        url: "https://app.squarespacescheduling.com/schedule.php?action=showCalendar&fulldate=1&owner=21872863&template=weekly"
+        method: "POST"
+        body: "type=20014044&calendar=5066641&skip=true&options%5Bqty%5D=1&options%5BnumDays%5D=5"
+        headers:
+          Content-Type: "application/x-www-form-urlencoded"
+      unavailable_regexp: 'data-original-text="No times are available"'
+      available_regexp: 'choose-time'
+      num_appts_regexp: '(?i)<label role\=[''"]radio[''"] data-qa\=[''"]select_appt[''"]' #if the regex has no capture group, just count number of matches
+  schaffner_skagit_jnj:
+    type: "standard_regexp"
+    api_key: "schaffner_skagit_jnj"
+    params:
+      endpoint:
+        url: "https://app.squarespacescheduling.com/schedule.php?action=showCalendar&fulldate=1&owner=21872863&template=weekly"
+        method: "POST"
+        body: "type=21179149&calendar=5036146&skip=true&options%5Bqty%5D=1&options%5BnumDays%5D=5"
+        headers:
+          Content-Type: "application/x-www-form-urlencoded"
+      unavailable_regexp: 'data-original-text="No times are available"'
+      available_regexp: 'choose-time'
+      num_appts_regexp: '(?i)<label role\=[''"]radio[''"] data-qa\=[''"]select_appt[''"]'
+  ne_tricountyhd_newport_moderna1:
+    type: "standard_regexp"
+    api_key: "ne_tricountyhd_newport_moderna1"
+    params:
+      endpoint:
+        url: "https://app.squarespacescheduling.com/schedule.php?action=showCalendar&fulldate=1&owner=22245023&template=weekly"
+        method: "POST"
+        body: "type=21361291&calendar=5248798&skip=true&options%5Bqty%5D=1&options%5BnumDays%5D=5"
+        headers:
+          Content-Type: "application/x-www-form-urlencoded"
+      unavailable_regexp: 'data-original-text="No times are available"'
+      available_regexp: 'choose-time'
+      num_appts_regexp: '(?i)<label role\=[''"]radio[''"] data-qa\=[''"]select_appt[''"]'
+  ne_tricountyhd_newport_pfizer1:
+    type: "standard_regexp"
+    api_key: "ne_tricountyhd_newport_pfizer1"
+    params:
+      endpoint:
+        url: "https://app.squarespacescheduling.com/schedule.php?action=showCalendar&fulldate=1&owner=22245023&template=weekly"
+        method: "POST"
+        body: "type=22983560&calendar=5539736&skip=true&options%5Bqty%5D=1&options%5BnumDays%5D=5"
+        headers:
+          Content-Type: "application/x-www-form-urlencoded"
+      unavailable_regexp: 'data-original-text="No times are available"'
+      available_regexp: 'choose-time'
+      num_appts_regexp: '(?i)<label role\=[''"]radio[''"] data-qa\=[''"]select_appt[''"]'
+  ne_tricountyhd_chewelah_moderna1:
+    type: "standard_regexp"
+    api_key: "ne_tricountyhd_chewelah_moderna1"
+    params:
+      endpoint:
+        url: "https://app.squarespacescheduling.com/schedule.php?action=showCalendar&fulldate=1&owner=22245023&template=weekly"
+        method: "POST"
+        body: "type=21361291&calendar=5264050&skip=true&options%5Bqty%5D=1&options%5BnumDays%5D=5"
+        headers:
+          Content-Type: "application/x-www-form-urlencoded"
+      unavailable_regexp: 'data-original-text="No times are available"'
+      available_regexp: 'choose-time'
+      num_appts_regexp: '(?i)<label role\=[''"]radio[''"] data-qa\=[''"]select_appt[''"]'
+  ne_tricountyhd_ione_moderna1:
+    type: "standard_regexp"
+    api_key: "ne_tricountyhd_ione_moderna1"
+    params:
+      endpoint:
+        url: "https://app.squarespacescheduling.com/schedule.php?action=showCalendar&fulldate=1&owner=22245023&template=weekly"
+        method: "POST"
+        body: "type=21361291&calendar=5248830&skip=true&options%5Bqty%5D=1&options%5BnumDays%5D=5"
+        headers:
+          Content-Type: "application/x-www-form-urlencoded"
+      unavailable_regexp: 'data-original-text="No times are available"'
+      available_regexp: 'choose-time'
+      num_appts_regexp: '(?i)<label role\=[''"]radio[''"] data-qa\=[''"]select_appt[''"]'
+  ne_tricountyhd_ferryhospital_moderna1:
+    type: "standard_regexp"
+    api_key: "ne_tricountyhd_ferryhospital_moderna1"
+    params:
+      endpoint:
+        url: "https://app.squarespacescheduling.com/schedule.php?action=showCalendar&fulldate=1&owner=22245023&template=weekly"
+        method: "POST"
+        body: "type=21361291&calendar=5301874&skip=true&options%5Bqty%5D=1&options%5BnumDays%5D=5"
+        headers:
+          Content-Type: "application/x-www-form-urlencoded"
+      unavailable_regexp: 'data-original-text="No times are available"'
+      available_regexp: 'choose-time'
+      num_appts_regexp: '(?i)<label role\=[''"]radio[''"] data-qa\=[''"]select_appt[''"]'
+  ne_tricountyhd_ferryhospital_pfizer1:
+    type: "standard_regexp"
+    api_key: "ne_tricountyhd_ferryhospital_pfizer1"
+    params:
+      endpoint:
+        url: "https://app.squarespacescheduling.com/schedule.php?action=showCalendar&fulldate=1&owner=22245023&template=weekly"
+        method: "POST"
+        body: "type=21328188&calendar=5422054&skip=true&options%5Bqty%5D=1&options%5BnumDays%5D=5"
+        headers:
+          Content-Type: "application/x-www-form-urlencoded"
+      unavailable_regexp: 'data-original-text="No times are available"'
+      available_regexp: 'choose-time'
+      num_appts_regexp: '(?i)<label role\=[''"]radio[''"] data-qa\=[''"]select_appt[''"]'
+  ne_tricountyhd_ferryhospital_jnj:
+    type: "standard_regexp"
+    api_key: "ne_tricountyhd_ferryhospital_jnj"
+    params:
+      endpoint:
+        url: "https://app.squarespacescheduling.com/schedule.php?action=showCalendar&fulldate=1&owner=22245023&template=weekly"
+        method: "POST"
+        body: "type=22606152&calendar=5470230&skip=true&options%5Bqty%5D=1&options%5BnumDays%5D=5"
+        headers:
+          Content-Type: "application/x-www-form-urlencoded"
+      unavailable_regexp: 'data-original-text="No times are available"'
+      available_regexp: 'choose-time'
+      num_appts_regexp: '(?i)<label role\=[''"]radio[''"] data-qa\=[''"]select_appt[''"]'
+  ne_tricountyhd_northport_moderna1:
+    type: "standard_regexp"
+    api_key: "ne_tricountyhd_northport_moderna1"
+    params:
+      endpoint:
+        url: "https://app.squarespacescheduling.com/schedule.php?action=showCalendar&fulldate=1&owner=22245023&template=weekly"
+        method: "POST"
+        body: "type=21361291&calendar=5286063&skip=true&options%5Bqty%5D=1&options%5BnumDays%5D=5"
+        headers:
+          Content-Type: "application/x-www-form-urlencoded"
+      unavailable_regexp: 'data-original-text="No times are available"'
+      available_regexp: 'choose-time'
+      num_appts_regexp: '(?i)<label role\=[''"]radio[''"] data-qa\=[''"]select_appt[''"]'
+  ne_tricountyhd_suncrest_moderna1:
+    type: "standard_regexp"
+    api_key: "ne_tricountyhd_suncrest_moderna1"
+    params:
+      endpoint:
+        url: "https://app.squarespacescheduling.com/schedule.php?action=showCalendar&fulldate=1&owner=22245023&template=weekly"
+        method: "POST"
+        body: "type=21361291&calendar=5226381&skip=true&options%5Bqty%5D=1&options%5BnumDays%5D=5"
+        headers:
+          Content-Type: "application/x-www-form-urlencoded"
+      unavailable_regexp: 'data-original-text="No times are available"'
+      available_regexp: 'choose-time'
+      num_appts_regexp: '(?i)<label role\=[''"]radio[''"] data-qa\=[''"]select_appt[''"]'
+  ne_tricountyhd_colville_moderna1:
+    type: "standard_regexp"
+    api_key: "ne_tricountyhd_colville_moderna1"
+    params:
+      endpoint:
+        url: "https://app.squarespacescheduling.com/schedule.php?action=showCalendar&fulldate=1&owner=22245023&template=weekly"
+        method: "POST"
+        body: "type=21361291&calendar=5436001&skip=true&options%5Bqty%5D=1&options%5BnumDays%5D=5"
+        headers:
+          Content-Type: "application/x-www-form-urlencoded"
+      unavailable_regexp: 'data-original-text="No times are available"'
+      available_regexp: 'choose-time'
+      num_appts_regexp: '(?i)<label role\=[''"]radio[''"] data-qa\=[''"]select_appt[''"]'
+  ne_tricountyhd_colville_pfizer1:
+    type: "standard_regexp"
+    api_key: "ne_tricountyhd_colville_pfizer1"
+    params:
+      endpoint:
+        url: "https://app.squarespacescheduling.com/schedule.php?action=showCalendar&fulldate=1&owner=22245023&template=weekly"
+        method: "POST"
+        body: "type=21328188&calendar=5539580&skip=true&options%5Bqty%5D=1&options%5BnumDays%5D=5"
+        headers:
+          Content-Type: "application/x-www-form-urlencoded"
+      unavailable_regexp: 'data-original-text="No times are available"'
+      available_regexp: 'choose-time'
+      num_appts_regexp: '(?i)<label role\=[''"]radio[''"] data-qa\=[''"]select_appt[''"]'
+  island_hospital:
+    type: "standard_regexp"
+    api_key: "island_hospital"
+    params:
+      endpoint:
+        url: "https://book.appointment-plus.com/book-appointment/get-grid-hours?startTimestamp=##CURRENT_DATE##+00%3A00%3A00&endTimestamp=##TOMORROW_DATE##+00%3A00%3A00&limitNumberOfDaysWithOpenSlots=5&employeeId=5529&services[]=3921&numberOfSpotsNeeded=1&isStoreHours=true&clientMasterId=421317&toTimeZone=false&fromTimeZone=132&_=##CURRENT_TIMESTAMP##"
+        method: "GET"
+      available_regexp: 'numberOfSpots'
+      unavailable_regexp: '"data":{"gridHours":\[\],"storeHours":\[\]}}'
+      num_appts_regexp: '"numberOfSpots":\[([\d,]+)\]'
+      num_appts_taken_regexp: '"numberOfSpotsTaken":\[([\d,]+)\]'
+
+  # spokane_arena:
+  #   type: "standard_regexp"
+  #   api_key: "spokane_arena"
+  #   params:
+  #     endpoint:
+  #       url: "https://prepmod.doh.wa.gov/clinic/search?location=99201&search_radius=10+miles&q[venue_search_name_or_venue_name_i_cont]=Arena&q[clinic_date_gteq]=&q[vaccinations_name_i_cont]=&commit=Search#search_results"
+  #       method: "GET"
+  #       allowed_status_codes: [302] #additional http status codes to accept as non-error codes (other than 200)
+  #     unavailable_regexp: "(?i).*no clinics to show.*"
+  # vital_care_battleground:
+  #   type: "multistage_regexp"
+  #   api_key: "vital_care_battleground"
+  #   params:
+  #     stages:
+  #       - endpoint:
+  #           url: 'https://www.vitalcarewa.com'
+  #           method: 'GET'
+  #         next_url_regexp: '(?i)<a class="[^"]*btn[^"]*" href="https?://[^"]+\.elationemr\.com/book/299460393435140">'
+  #       - endpoint:
+  #           url: 'https://www.app.elationemr.com/book/api/practices/299460393435140'
+  #           method: 'GET'
+  #         unavailable_regexp: '(?i)"name":"COVID vaccine","is_telehealth":false,"patient_bookable":false'  
+  #         next_url_regexp: '(?i)"id":([0-9]+),[^\{\}]+,"name":"COVID vaccine","is_telehealth":false,"patient_bookable":true'
+  #       - endpoint:
+  #           url: 'https://www.app.elationemr.com/book/api/299460393435140/availabilities?start_date=##{2006-01-02;0;3}##&end_date=##{2006-01-02;0;11}##&appt_type_id=##PREVIOUS##'
+  #           method: 'GET'
+  #         unavailable_regexp: '(:?"data":\[\])|(:?"data":\{\})|(:?"data":null)'
+  #         available_regexp: '"data":{[^\{\}]+}'
+
+# Jessica (@jxchong)
+  yakima_county_popups:
+    type: "standard_regexp"
+    api_key: "yakima_county_popups"
+    min_scrape_interval: 90 #scrape once
+    params:
+      endpoint:
+        url: https://www.yakimacounty.us/2472/COVID-19-Vaccine
+        method: "GET"
+      available_regexp: 'Walk-ins welcome|<strong>Date/Time'
+      unavailable_regexp: 'Yakima State Fair Park|None at this time'
+  ferndale_pharmacy:
+    type: "standard_regexp"
+    api_key: "ferndale_pharmacy"
+    min_scrape_interval: 90 #scrape once
+    params:
+      default_status: "No"
+      endpoint:
+        url: https://ferndalepharmacy.com/covid-19-info/
+        method: "GET"
+      available_regexp: '(make|schedule|book) an appointment|(?i)(Vaccines in stock)'
+      unavailable_regexp: 'currently out'
+  # camano_island_health:
+  #   type: "standard_regexp"
+  #   api_key: "camano_island_health"
+  #   min_scrape_interval: 90 #scrape once
+  #   params:
+  #     endpoint:
+  #       url: https://camanoislandhealth.com
+  #       method: "GET"
+  #     unavailable_regexp: 'not available|booked|filled to capacity'
+  #     available_regexp: 'have available'
+  whitman_hospital:
+    type: "standard_regexp"
+    api_key: "whitman_hospital"
+    min_scrape_interval: 90 #scrape once
+    params:
+      endpoint:
+        url: https://www.whmc.org/covid-19-vaccination/
+        method: "GET"
+      available_regexp: '>Open<'
+      unavailable_regexp: '(>Full){5,}'
+  mason_county_any:
+    type: "multistage_regexp"
+    api_key: "mason_county_any"
+    params:
+      default_status: "No"
+      stages:
+        - endpoint:
+            url: 'https://www.co.mason.wa.us/COVID-19/vaccination-information.php'
+            method: "GET"
+          unavailable_regexp: '(?i)(Registration now closed)'
+          next_url_regexp: 'https://prepmod.doh.wa.gov(?:/+)reg/([0-9]+)'
+        - endpoint:
+            url: "https://prepmod.doh.wa.gov/reg/##PREVIOUS##"
+            method: "GET"
+          unavailable_regexp: '(Clinic does not have any appointment slots available)|(Someone will contact you about your appointment)|(Deadline)|(This clinic is closed)|(Clinic appointments slots are currently being booked by others. Please check back later to see if any appointments have become available)'
+          available_regexp: '[0-9]+\s+appointments available|Sign Up for Vaccinations'
+          num_appts_regexp: '([0-9]+)\s+appointments available'
+  # pacificcounty_hd:
+  #   type: "multistage_regexp"
+  #   api_key: "test_jessica"
+  #   params:
+  #     default_status: "No"
+  #     stages:
+  #       - endpoint:
+  #           url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSu_13xlI3fdnK99VIUjcRoOztehxIFiLpMcK2xOO1tBQtLGMs7Mnt7UJpMaR89lyHKDmEWpHstWI9O/pubhtml'
+  #           method: "GET"
+  #         next_url_regexp: '<tr .*Pacific County Health Dept(?:.+)href="(https?:(?:/|(?:\\u002F)){2}www.google.com\/url\?q=https?:(?:/|(?:\\u002F)){2}prepmod.doh.wa.gov.+?)"'
+  #       - endpoint:
+  #           url: "##PREVIOUS##"
+  #           method: "GET"
+  #         next_url_regexp: '"(https://prepmod.doh.wa.gov.+?)">'
+  #       - endpoint:
+  #           url: "##PREVIOUS##"
+  #           method: "GET"
+  #         unavailable_regexp: '(Clinic does not have any appointment slots available)|(Someone will contact you about your appointment)|(Deadline)|(This clinic is closed)|(errors\?message=)|(Please check back later)'
+  #         available_regexp: '([0-9]+\s+appointments available)'
+  # pacificcounty_oceanbeachhospital:
+  #   type: "multistage_regexp"
+  #   api_key: "test_jessica"
+  #   params:
+  #     default_status: "No"
+  #     stages:
+  #       - endpoint:
+  #           url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSu_13xlI3fdnK99VIUjcRoOztehxIFiLpMcK2xOO1tBQtLGMs7Mnt7UJpMaR89lyHKDmEWpHstWI9O/pubhtml'
+  #           method: "GET"
+  #         next_url_regexp: '<tr .*Ocean Beach Hospital(?:.+)href="(https?:(?:/|(?:\\u002F)){2}www.google.com\/url\?q=https?:(?:/|(?:\\u002F)){2}prepmod.doh.wa.gov.+?)"'
+  #       - endpoint:
+  #           url: "##PREVIOUS##"
+  #           method: "GET"
+  #         next_url_regexp: '"(https://prepmod.doh.wa.gov.+?)">'
+  #       - endpoint:
+  #           url: "##PREVIOUS##"
+  #           method: "GET"
+  #         unavailable_regexp: '(Clinic does not have any appointment slots available)|(Someone will contact you about your appointment)|(Deadline)|(This clinic is closed)|(errors\?message=)|(Please check back later)'
+  #         available_regexp: '([0-9]+\s+appointments available)'
+  lewis_fairgrounds_any:
+    type: "multistage_regexp"
+    api_key: "lewis_fairgrounds_any"
+    params:
+      default_status: "No"
+      stages:
+        - endpoint:
+            url: 'https://lewiscountywa.gov/departments/public-health/blog/'
+            method: "GET"
+          next_url_regexp: '(?i)/(departments/public-health/blog/COVID-19-Vaccine-Appointments-for.+-Available)'
+        - endpoint:
+            url: "https://lewiscountywa.gov/##PREVIOUS##/"
+            method: "GET"
+          next_url_regexp: 'https://prepmod.doh.wa.gov(?:/+)reg/([0-9]+)'
+        - endpoint:
+            url: "https://prepmod.doh.wa.gov/reg/##PREVIOUS##"
+            method: "GET"
+          unavailable_regexp: '(Clinic does not have any appointment slots available)|(Someone will contact you about your appointment)|(Deadline)|(This clinic is closed)|(errors\?message=)|(Please check back later)'
+          available_regexp: '[0-9]+\s+appointments available'
+          num_appts_regexp: '([0-9]+)\s+appointments available'
+  rxpress_pharmacy:
+    type: "standard_regexp"
+    api_key: "rxpress_pharmacy"
+    min_scrape_interval: 90 #scrape once
+    params:
+      endpoint:
+        url: https://api2.vcita.com/platform/v1/services/p7c9j4y5rnts3g6i/availability?start_date=##CURRENT_DATE##&end_date=##NEXTMONTH_DATE##&time_zone=America%2FLos_Angeles&include_dst=true&o=ZGlyZWN0&s=https:%2F%2Fgo.thryv.com%2Fsite%2FRxpressPharmacy%2Fonline-scheduling%3Fo%3DZGlyZWN0%26isWidget%3Dfalse&source_name=ZGlyZWN0&source_url=https:%2F%2Fgo.thryv.com%2Fsite%2FRxpressPharmacy%2Fonline-scheduling%3Fo%3DZGlyZWN0%26isWidget%3Dfalse
+        method: "GET"
+      available_regexp: '"spots_open":[1-9]+'
+      unavailable_regexp: '"availabilities":{}'
+      num_appts_regexp: '"spots_open":(\d+)'
+  lk_chelan_eventbrite:
+    type: "multistage_regexp"
+    api_key: "lk_chelan_eventbrite"
+    params:
+      default_status: "No"
+      stages:
+        - endpoint:
+            url: 'https://lakechelanhealth.org/covid-19/'
+            method: "GET"
+          unavailable_regexp: '(?i)(none scheduled)'
+          next_url_regexp: '-clinic-tickets-(\d{3,})|https://www.eventbrite.com.*/(\d{3,})'
+        - endpoint:
+            url: "https://www.eventbrite.com/api/v3/series/##PREVIOUS##/events/?time_filter=current_future&expand=series_dates%2Cticket_availability%2Cevent_sales_status%2Cvenue&page_size=12&continuation="
+            method: "GET"
+          available_regexp: '(?:)(is_sold_out":false)'
+          unavailable_regexp: '(?:)(is_sold_out":true)|("events":\[\])'
+          num_appts_regexp: '"has_available_tickets":true'
+          limited_threshold: 1 #api actually returns groups of appointments, more than 1 group is plenty
+  # prosser_memorial_health: 
+  #   type: "standard_regexp"
+  #   api_key: "prosser_memorial_health"
+  #   min_scrape_interval: 90 #scrape once
+  #   params:
+  #     endpoint:
+  #       url: https://www.prosserhealth.org/vaccineclinic
+  #       method: "GET"
+  #     available_regexp: '">Register</a>'
+  #     unavailable_regexp: '(>Sold Out<)|(Register</a>){0}'
+  # forks_hospital:
+  #   type: "standard_regexp"
+  #   api_key: "forks_hospital"
+  #   min_scrape_interval: 90 #scrape once
+  #   params:
+  #     endpoint:
+  #       url: https://www.forkshospital.org/forks-community-hospital-status-report-for-forks-west-end/
+  #       method: "GET"
+  #     available_regexp: 'hosting a free vaccination clinic ([\w ,\-])* (April|May|June|July|August|September|October|November|December)'
+  #     unavailable_regexp: 'not available|Saturday, March 27'
+  #     available_status: 'Walkin'
+  university_place_clinic:
+    type: "standard_regexp"
+    api_key: "university_place_clinic"
+    min_scrape_interval: 90 #scrape once
+    params:
+      endpoint:
+        url: https://www.universityplaceclinic.com/contents/covid-19-vaccination
+        method: "GET"
+      available_regexp: 'is now offering COVID-19 vaccine appointments|schedule a COVID vaccination appointment'
+      unavailable_regexp: 'not available'
+      available_status: 'Email'
+  klickitat_valley_health:
+    type: "standard_regexp"
+    api_key: "klickitat_valley_health_call"
+    min_scrape_interval: 90 #scrape once
+    params:
+      endpoint:
+        url: http://www.kvhealth.net/index.php/kvh/pages/covid-19-vaccine-information
+        method: "GET"
+      available_regexp: 'Call the KVH COVID-19 Hotline at 509.773.4029 and schedule your appointment'
+      unavailable_regexp: 'not available|filled'
+      available_status: 'Call'
+  baker_direct_primary_moderna:
+    type: "multistage_regexp"
+    api_key: "baker_direct_primary_moderna"
+    params:
+      default_status: "No"
+      stages:
+        - endpoint:
+            url: 'https://www.picktime.com/book/slots?_=1620622171196&dateAndTime=##{20060102;0;0}##0000&schedulerId=7c4023a1-5fce-4b99-b64b-6225a8cc7e4b&locationId=73899470-cb43-4d9e-825a-e0a47befe587&duration=10&slot=5&offBooking=false&eventType=appointment&serviceClassId=cb0ebf22-ce96-4887-b0ea-45fd5f350c67&accountId=b279b936-c596-43f2-b395-3cd3492ddd75&timezone=US%2FPacific-New'
+            method: "GET"
+          available_regexp: '"data":\[2021(\d){8}'
+          num_appts_regexp: '\[2021(?:\d){8}'
+          next_url_regexp: '"response":true'
+        - endpoint:
+            url: "https://www.picktime.com/book/slots?_=1620622171196&dateAndTime=##{20060102;0;1}##0000&schedulerId=7c4023a1-5fce-4b99-b64b-6225a8cc7e4b&locationId=73899470-cb43-4d9e-825a-e0a47befe587&duration=10&slot=5&offBooking=false&eventType=appointment&serviceClassId=cb0ebf22-ce96-4887-b0ea-45fd5f350c67&accountId=b279b936-c596-43f2-b395-3cd3492ddd75&timezone=US%2FPacific-New"
+            method: "GET"
+          available_regexp: '"data":\[2021(\d){8}'
+          num_appts_regexp: '2021(?:\d){8}'
+          next_url_regexp: '"response":true'
+        - endpoint:
+            url: "https://www.picktime.com/book/slots?_=1620622171196&dateAndTime=##{20060102;0;2}##0000&schedulerId=7c4023a1-5fce-4b99-b64b-6225a8cc7e4b&locationId=73899470-cb43-4d9e-825a-e0a47befe587&duration=10&slot=5&offBooking=false&eventType=appointment&serviceClassId=cb0ebf22-ce96-4887-b0ea-45fd5f350c67&accountId=b279b936-c596-43f2-b395-3cd3492ddd75&timezone=US%2FPacific-New"
+            method: "GET"
+          available_regexp: '"data":\[2021(\d){8}'
+          num_appts_regexp: '2021(?:\d){8}'
+          next_url_regexp: '"response":true'
+        - endpoint:
+            url: "https://www.picktime.com/book/slots?_=1620622171196&dateAndTime=##{20060102;0;3}##0000&schedulerId=7c4023a1-5fce-4b99-b64b-6225a8cc7e4b&locationId=73899470-cb43-4d9e-825a-e0a47befe587&duration=10&slot=5&offBooking=false&eventType=appointment&serviceClassId=cb0ebf22-ce96-4887-b0ea-45fd5f350c67&accountId=b279b936-c596-43f2-b395-3cd3492ddd75&timezone=US%2FPacific-New"
+            method: "GET"
+          available_regexp: '"data":\[2021(\d){8}'
+          num_appts_regexp: '2021(?:\d){8}'
+          next_url_regexp: '"response":true'
+        - endpoint:
+            url: "https://www.picktime.com/book/slots?_=1620622171196&dateAndTime=##{20060102;0;4}##0000&schedulerId=7c4023a1-5fce-4b99-b64b-6225a8cc7e4b&locationId=73899470-cb43-4d9e-825a-e0a47befe587&duration=10&slot=5&offBooking=false&eventType=appointment&serviceClassId=cb0ebf22-ce96-4887-b0ea-45fd5f350c67&accountId=b279b936-c596-43f2-b395-3cd3492ddd75&timezone=US%2FPacific-New"
+            method: "GET"
+          available_regexp: '"data":\[2021(\d){8}'
+          num_appts_regexp: '2021(?:\d){8}'
+          next_url_regexp: '"response":true'
+        - endpoint:
+            url: "https://www.picktime.com/book/slots?_=1620622171196&dateAndTime=##{20060102;0;5}##0000&schedulerId=7c4023a1-5fce-4b99-b64b-6225a8cc7e4b&locationId=73899470-cb43-4d9e-825a-e0a47befe587&duration=10&slot=5&offBooking=false&eventType=appointment&serviceClassId=cb0ebf22-ce96-4887-b0ea-45fd5f350c67&accountId=b279b936-c596-43f2-b395-3cd3492ddd75&timezone=US%2FPacific-New"
+            method: "GET"
+          available_regexp: '"data":\[2021(\d){8}'
+          num_appts_regexp: '2021(?:\d){8}'
+          next_url_regexp: '"response":true'
+        - endpoint:
+            url: "https://www.picktime.com/book/slots?_=1620622171196&dateAndTime=##{20060102;0;6}##0000&schedulerId=7c4023a1-5fce-4b99-b64b-6225a8cc7e4b&locationId=73899470-cb43-4d9e-825a-e0a47befe587&duration=10&slot=5&offBooking=false&eventType=appointment&serviceClassId=cb0ebf22-ce96-4887-b0ea-45fd5f350c67&accountId=b279b936-c596-43f2-b395-3cd3492ddd75&timezone=US%2FPacific-New"
+            method: "GET"
+          available_regexp: '"data":\[2021(\d){8}'
+          num_appts_regexp: '2021(?:\d){8}'
+          next_url_regexp: '"response":true'
+        - endpoint:
+            url: "https://www.picktime.com/book/slots?_=1620622171196&dateAndTime=##{20060102;0;7}##0000&schedulerId=7c4023a1-5fce-4b99-b64b-6225a8cc7e4b&locationId=73899470-cb43-4d9e-825a-e0a47befe587&duration=10&slot=5&offBooking=false&eventType=appointment&serviceClassId=cb0ebf22-ce96-4887-b0ea-45fd5f350c67&accountId=b279b936-c596-43f2-b395-3cd3492ddd75&timezone=US%2FPacific-New"
+            method: "GET"
+          available_regexp: '"data":\[2021(\d){8}'
+          unavailable_regexp: '"data":\[\]'
+          num_appts_regexp: '2021(?:\d){8}'
+          next_url_regexp: '"response":true'
+          
+  # sound_family_med: # 4/23 webpage says they're not going to receive more doses
+  #   type: "standard_regexp"
+  #   api_key: "sound_family_med"
+  #   min_scrape_interval: 90 #scrape once
+  #   params:
+  #     endpoint:
+  #       url: https://www.soundfamilymedicine.com/covid-19/
+  #       method: "GET"
+  #     available_regexp: 'have 1st dose vaccine available'
+  #     unavailable_regexp: 'run out of our 1st dose vaccine supply'
+  # shuksan_family_medicine:
+  #   type: "multistage_regexp"
+  #   api_key: "shuksan_family_medicine"
+  #   params:
+  #     default_status: "No"
+  #     stages:
+  #       - endpoint:
+  #           url: 'https://www.mtshuksanfamilymedicine.com/news-updates/'
+  #           method: "GET"
+  #         next_url_regexp: '</p><a href="https://www.mtshuksanfamilymedicine.com/([\w\d\-\/]+)"'
+  #       - endpoint:
+  #           url: "https://www.mtshuksanfamilymedicine.com/##PREVIOUS##/"
+  #           method: "GET"
+  #         unavailable_regexp: '(run out)|(not received vaccine)|(do not have any more appointments)|(no more appointments)|(out of vaccine)|(out of appointments)'
+  #         available_regexp: '(vaccine available)|(make an appointment)|(will continue to carry)'
+  #         available_status: 'Email'
+  flexbooker_genoa_capitolhill:
+    type: "standard_regexp"
+    api_key: "flexbooker_genoa_capitolhill"
+    min_scrape_interval: 90 #scrape once
+    params:
+      endpoint:
+        url: https://a.flexbooker.com/api/schedule?csvServiceIds=41835&merchantGuid=d1895c12-b30a-4f8f-ab5a-dab1987df4ca&startDate=##{2006/01/02;0;0}##&endDate=##{2006/01/02;1;1}##&timeZone=America/Los_Angeles&addOns=&duration=&employeeId=44954
+        method: "GET"
+      available_regexp: '"AvailableDates":\[([\w\,d\/"]+)\]'
+      unavailable_regexp: '"AvailableDates":\[\]'
+      num_appts_regexp: '(?i)"Time"'
+  flexbooker_genoa_auburn:
+    type: "standard_regexp"
+    api_key: "flexbooker_genoa_auburn"
+    min_scrape_interval: 90 #scrape once
+    params:
+      endpoint:
+        url: https://a.flexbooker.com/api/schedule?csvServiceIds=41835&merchantGuid=d1895c12-b30a-4f8f-ab5a-dab1987df4ca&startDate=##{2006/01/02;0;0}##&endDate=##{2006/01/02;1;1}##&timeZone=America/Los_Angeles&addOns=&duration=&employeeId=44739
+        method: "GET"
+      available_regexp: '"AvailableDates":\[([\w\,d\/"]+)\]'
+      unavailable_regexp: '"AvailableDates":\[\]'
+      num_appts_regexp: '(?i)"Time"'
+  flexbooker_genoa_kent:
+    type: "standard_regexp"
+    api_key: "flexbooker_genoa_kent"
+    min_scrape_interval: 90 #scrape once
+    params:
+      endpoint:
+        url: https://a.flexbooker.com/api/schedule?csvServiceIds=41835&merchantGuid=d1895c12-b30a-4f8f-ab5a-dab1987df4ca&startDate=##{2006/01/02;0;0}##&endDate=##{2006/01/02;1;1}##&timeZone=America/Los_Angeles&addOns=&duration=&employeeId=43810
+        method: "GET"
+      available_regexp: '"AvailableDates":\[([\w,\d\/"]+)\]'
+      unavailable_regexp: '"AvailableDates":\[\]'
+      num_appts_regexp: '(?i)"Time"'
+  flexbooker_genoa_everett:
+    type: "standard_regexp"
+    api_key: "flexbooker_genoa_everett"
+    min_scrape_interval: 90 #scrape once
+    params:
+      endpoint:
+        url: https://a.flexbooker.com/api/schedule?csvServiceIds=41835&merchantGuid=d1895c12-b30a-4f8f-ab5a-dab1987df4ca&startDate=##{2006/01/02;0;0}##&endDate=##{2006/01/02;1;1}##&timeZone=America/Los_Angeles&addOns=&duration=&employeeId=49254
+        method: "GET"
+      available_regexp: '"AvailableDates":\[([\w,\d\/"]+)\]'
+      unavailable_regexp: '"AvailableDates":\[\]'
+      num_appts_regexp: '(?i)"Time"'
+  flexbooker_genoa_wallingford:
+    type: "standard_regexp"
+    api_key: "flexbooker_genoa_wallingford"
+    min_scrape_interval: 90 #scrape once
+    params:
+      endpoint:
+        url: https://a.flexbooker.com/api/schedule?csvServiceIds=43014&merchantGuid=d1895c12-b30a-4f8f-ab5a-dab1987df4ca&startDate=##{2006/01/02;0;0}##&endDate=##{2006/01/02;1;1}##&timeZone=America/Los_Angeles&addOns=&duration=&employeeId=44373
+        method: "GET"
+      available_regexp: '"AvailableDates":\[([\w\,d\/"]+)\]'
+      unavailable_regexp: '"AvailableDates":\[\]'
+      num_appts_regexp: '(?i)"Time"'
+  # moved to SUG general scraper (python)
+  # northwest_medspecialties:
+  #   type: "multistage_regexp"
+  #   api_key: "northwest_medspecialties"
+  #   min_scrape_interval: 90
+  #   params:
+  #     default_status: "No"
+  #     stages:
+  #       - endpoint:
+  #           url: 'https://www.nwmedicalspecialties.com/patients-caregivers/covid-19-information/'
+  #           method: "GET"
+  #         unavailable_regexp: 'https://i2.wp.com/www.nwmedicalspecialties.com/wp-content/uploads/2021/04/Vaccine-Protect-yourself.-Protect-others..png'
+  #         recursion_type: "any"
+  #         next_url_regexp: '(?i)(https://www.signupgenius.com/[\w]+/[0-9a-z\-]+)'
+  #       - endpoint:
+  #           url: '##PREVIOUS##'
+  #           method: "GET"
+  #         unavailable_regexp: '(>NO SLOTS AVAILABLE. SIGN UP IS FULL.</h1>)|(<title>Oops! An Error.</title>)|(>The Sign Up Was Not Found<)||(sign up period for this event has ended)'
+  #         available_regexp: '.*<input type="submit" value="Submit and Sign Up".*'
+  # oneskyfamilymedicine:
+  #   type: "standard_regexp"
+  #   api_key: "oneskyfamilymedicine"
+  #   min_scrape_interval: 90 #scrape once
+  #   params:
+  #     endpoint:
+  #       url: https://www.oneskyfamilymedicine.com/covid-19-vaccine
+  #       method: "GET"
+  #     unavailable_regexp: 'NO COVID VACCINE AVAILABLE|(?i)(be receiving)'
+  snoqualmie_valley_clinic:
+    type: "standard_regexp"
+    api_key: "snovalley_clinic"
+    min_scrape_interval: 90 #scrape once
+    params:
+      endpoint:
+        url: http://snovalleyclinic.com/
+        method: "GET"
+      unavailable_regexp: '(?i)(?:appointments (have been|are fully)* booked)'
+      available_regexp: '(?i)(?:Appointment(?:s*) available)'
+      available_status: 'Call'
+  # yvfwc_toppenish:
+  #     type: "standard_regexp"
+  #     api_key: "yvfwc_toppenish"
+  #     min_scrape_interval: 90 #scrape once
+  #     params:
+  #       endpoint:
+  #         url: https://www.yvfwc.com/events/
+  #         method: "GET"
+  #       available_regexp: '<td class="tribe-events-thismonth tribe-events-future[\S\s]*(COVID-19 Vaccine Clinic)[\S\s]*</td>'
+  #       unavailable_regexp: '<td class="tribe-events-thismonth tribe-events-past[\S\s]*(COVID-19 Vaccine Clinic)[\S\s]*</td>|""'
+  #       available_status: 'Walkin'
+  wahkiakum_county:
+      type: "standard_regexp"
+      api_key: "wahkiakum_county"
+      min_scrape_interval: 90 #scrape once
+      params:
+        endpoint:
+          url: https://www.co.wahkiakum.wa.us/517/COVID-Vaccine
+          method: "GET"
+        available_regexp: 'There is a clinic scheduled for \w+ (January|February|March|April|May|June|July|August|September|October|November|December)'
+        unavailable_regexp: 'full|unavailable|no appointments available'
+        available_status: 'Call'
+  palousemedical:
+      type: "standard_regexp"
+      api_key: "palousemedical"
+      min_scrape_interval: 90 #scrape once
+      params:
+        endpoint:
+          url: https://www.palousemedical.com/covid-19/covid-19-vaccine/
+          method: "GET"
+        available_regexp: 'UPCOMING VACCINE CLINIC DATES[\S\s]*(January|February|March|April|May|June|July|August|September|October|November|December)'
+        unavailable_regexp: 'full|unavailable|no appointments available'
+        available_status: 'Call'
+  pullman_regional:
+      type: "standard_regexp"
+      api_key: "pullman_regional"
+      min_scrape_interval: 90 #scrape once
+      params:
+        endpoint:
+          url: https://www.pullmanregional.org/covid-vaccine
+          method: "GET"
+        available_regexp: '<p[\S\s]*>[\S\s]*Vaccine Clinic[\S\s]*(January|February|March|April|May|June|July|August|September|October|November|December)[\S\s]*</p>'
+        unavailable_regexp: 'full|unavailable|no appointments available'
+        available_status: 'Call'
+  # urbanleague_seniorcenter:
+  #     type: "standard_regexp"
+  #     api_key: "urbanleague_seniorcenter"
+  #     min_scrape_interval: 90 #scrape once
+  #     params:
+  #       endpoint:
+  #         url: https://urbanleague.org/covid-19-vaccine-opportunities/
+  #         method: "GET"
+  #       available_regexp: '<div class="elementor-widget-wrap">[\S\s]*South Seattle Senior Center[\S\s]*jotform[\S\s]*</a></div></div></div></div>'
+  #       unavailable_regexp: '.*'
+  # urbanleague_any:
+  #     type: "standard_regexp"
+  #     api_key: "urbanleague_any"
+  #     min_scrape_interval: 90 #scrape once
+  #     params:
+  #       endpoint:
+  #         url: https://urbanleague.org/covid-19-vaccine-opportunities/
+  #         method: "GET"
+  #       available_regexp: '<span\s+class="elementor-button-text">Register\s+Now</span>'
+  #       unavailable_regexp: '.*'                
+  # aarth_nbcf:
+  #   type: "multistage_regexp"
+  #   api_key: "aarth_nbcf"
+  #   min_scrape_interval: 90
+  #   params:
+  #     default_status: "No"
+  #     stages:
+  #       - endpoint:
+  #           url: 'https://www.aarth.org/'
+  #           method: "GET"
+  #         next_url_regexp: '<a data-testid="linkElement" href="https://www.aarth.org/nbcf-vaccine-appointments-(\d+)"'
+  #         recursion_type: "any"
+  #       - endpoint:
+  #           url: 'https://www.aarth.org/nbcf-vaccine-appointments-##PREVIOUS##'
+  #           method: "GET"
+  #         available_regexp: '<div class="appointmentSlot slot " data-value|<input type="checkbox"[\s\S]+ disabled="enabled">|After you hit submit, scroll up to see confirmation'
+  #         unavailable_regexp: '(?i)(CLINIC IS FULL)|<div class="appointmentSlot slot disabled" data-value|<input type="checkbox"[\s\S]+ disabled="disabled">'
+  davis_dental:
+    type: "standard_regexp"
+    api_key: "davis_dental"
+    min_scrape_interval: 90 #scrape once
+    params:
+      endpoint:
+        url: 'https://www.localmed.com/graphql/'
+        method: "POST"
+        body: '{"operationName":"OfficeCalendarNextOpeningQuery","variables":{"officeId":"c22ujvnvtbf217s_9d829a8","reasonForVisitId":"us_1223_new_covidvaccine","after":"2021-04-07"},"query":"query OfficeCalendarNextOpeningQuery($officeId: ID\u0021, $reasonForVisitId: ID\u0021, $after: String\u0021) {\n  nextOpening(officeId: $officeId, reasonForVisitId: $reasonForVisitId, after: $after) {\n    id\n    time\n    provider {\n      id\n      __typename\n    }\n    __typename\n  }\n}\n"}'
+        headers:
+          content-type: "application/json"
+      available_regexp: '(nextOpening":{"id")|("__typename": "Opening")'
+      unavailable_regexp: 'nextOpening":null}}'
+  # millcreek_family:
+  #   type: "standard_regexp"
+  #   api_key: "millcreek_family"
+  #   min_scrape_interval: 90 #scrape once
+  #   params:
+  #     endpoint:
+  #       url: 'https://millcreekfamilypractice.org/'
+  #       method: "GET"
+  #     available_regexp: '(vaccine available)|(make an appointment)'
+  #     unavailable_regexp: '(?i)(NO AVAILABLE APPOINTMENTS)|(?i)(NO APPOINTMENTS AVAILABLE)|(?i)(run out)|(?i)(not received vaccine)|(?i)(do not have any more appointments)|(?i)(no more appointments)|(?i)(out of vaccine)|(?i)(out of appointments)'
+  peacehealth_fridayharbor:
+    type: "standard_regexp"
+    api_key: "static_peacehealth_fridayharbor"
+    min_scrape_interval: 90 #scrape once
+    params:
+      endpoint:
+        url: 'https://www.peacehealth.org/coronavirus/vaccine/washington'
+        method: "GET"
+      available_regexp: '<li><strong>Vaccine supply</strong>. PeaceHealth Peace Island (?:.*) doses(?:.*?)<\/li>'
+      unavailable_regexp: '(?i)(NO AVAILABLE APPOINTMENTS)|(?i)(NO APPOINTMENTS AVAILABLE)|(?i)(run out)|(?i)(did not receive)|(?i)(not received vaccine)|(?i)(do not have any more appointments)|(?i)(no more appointments)|(?i)(out of vaccine)|(?i)(out of appointments)'      
+      available_status: 'Call'
+  peacehealth_sedrowoolley :
+    type: "standard_regexp"
+    api_key: "static_peacehealth_sedrowoolley"
+    min_scrape_interval: 90 #scrape once
+    params:
+      endpoint:
+        url: 'https://www.peacehealth.org/coronavirus/vaccine/washington'
+        method: "GET"
+      available_regexp: '<strong>Sedro-Woolley and Burlington</strong>(?s:.+)\d+(?s:.+)doses(?s:.+?)<\/li>'
+      unavailable_regexp: '(?i)(NO AVAILABLE APPOINTMENTS)|(?i)(NO APPOINTMENTS AVAILABLE)|(?i)(run out)|(?i)(not received vaccine)|(?i)(do not have any more appointments)|(?i)(no more appointments)|(?i)(out of vaccine)|(?i)(out of appointments)'
+      available_status: 'Call'
+  # islanddrug_oakharbor:
+  #   type: "multistage_regexp"
+  #   api_key: "island_drug_oakharbor"
+  #   params:
+  #     default_status: "No"
+  #     stages:
+  #       - endpoint:
+  #           url: 'https://islanddrug.com/appt/'
+  #           method: "GET"
+  #         next_url_regexp: '<a href="https://prepmod.doh.wa.gov(?:/+)(clinic/private_registration/(?:[\w\d]+?))"><strong>[\w\s\d&;|,\+/]+</strong> Oak Harbor</a>'
+  #         recursion_type: "any"
+  #       - endpoint:
+  #           url: "https://prepmod.doh.wa.gov/##PREVIOUS##"
+  #           method: "GET"
+  #         unavailable_regexp: '(Clinic does not have any appointment slots available)|(Someone will contact you about your appointment)|(Deadline)|(This clinic is closed)|(errors\?message=)|(Please check back later)'
+  #         available_regexp: '([0-9]+\s+appointments available)'
+  #         num_appts_regexp: '([0-9]+)\s+appointments available'
+  # islanddrug_laconner:
+  #   type: "multistage_regexp"
+  #   api_key: "island_drug_laconner"
+  #   params:
+  #     default_status: "No"
+  #     stages:
+  #       - endpoint:
+  #           url: 'https://islanddrug.com/appt/'
+  #           method: "GET"
+  #         next_url_regexp: '<a href="https://prepmod.doh.wa.gov(?:/+)(clinic/private_registration/(?:[\w\d]+?))"><strong>[\w\s\d&;|,\+/]+</strong> La Conner</a>'
+  #         recursion_type: "any"
+  #       - endpoint:
+  #           url: "https://prepmod.doh.wa.gov/##PREVIOUS##"
+  #           method: "GET"
+  #         unavailable_regexp: '(Clinic does not have any appointment slots available)|(Someone will contact you about your appointment)|(Deadline)|(This clinic is closed)|(errors\?message=)|(Please check back later)'
+  #         available_regexp: '([0-9]+\s+appointments available)'
+  #         num_appts_regexp: '([0-9]+)\s+appointments available'
+  # islanddrug_clinton:
+  #   type: "multistage_regexp"
+  #   api_key: "island_drug_clinton"
+  #   params:
+  #     default_status: "No"
+  #     stages:
+  #       - endpoint:
+  #           url: 'https://islanddrug.com/appt/'
+  #           method: "GET"
+  #         next_url_regexp: '<a href="https://prepmod.doh.wa.gov(?:/+)(clinic/private_registration/(?:[\w\d]+?))"><strong>[\w\s\d&;|,\+/]+</strong> Clinton</a>'
+  #         recursion_type: "any"
+  #       - endpoint:
+  #           url: "https://prepmod.doh.wa.gov/##PREVIOUS##"
+  #           method: "GET"
+  #         unavailable_regexp: '(Clinic does not have any appointment slots available)|(Someone will contact you about your appointment)|(Deadline)|(This clinic is closed)|(errors\?message=)|(Please check back later)'
+  #         available_regexp: '([0-9]+\s+appointments available)'
+  #         num_appts_regexp: '([0-9]+)\s+appointments available'
+  south_island_med:
+    type: "standard_regexp"
+    api_key: "south_island_med"
+    min_scrape_interval: 90 #scrape once
+    params:
+      endpoint:
+        url: 'https://southislandmedical.org/covid-19'
+        method: "GET"
+      available_regexp: '((\d)+ (.*)doses (.*)this week)|(?i)(Call (?:[\w\s&;]+) schedule an appointment)'
+      unavailable_regexp: '(?i)(NO AVAILABLE APPOINTMENTS)|(?i)(NO APPOINTMENTS AVAILABLE)|(?i)(run out)|(?i)(did not receive)|(?i)(not received vaccine)|(?i)(do not have any more appointments)|(?i)(no more appointments)|(?i)(out of vaccine)|(?i)(out of appointments)'      
+      available_status: 'Call'
+  kingcounty_auburn_mall:
+    type: "standard_regexp"
+    api_key: "kingcounty_auburn_mall"
+    min_scrape_interval: 90 #scrape once
+    params:
+      endpoint:
+        timeout: 30
+        # url: 'https://yourcovidvaccine.kingcounty.gov/api/slots/?locationid=0071a660-048d-eb11-a812-001dd80490ec&startdate=2021-04-27&enddate=2021-04-28&dosevalue=935000000' # this is how the webpage lets you search (one day at a time). After playing around a bit, if I try to get it to search more than 5 days, I run the risk of it timing out.
+        url: 'https://yourcovidvaccine.kingcounty.gov/api/slots/?locationid=0071a660-048d-eb11-a812-001dd80490ec&startdate=##CURRENT_DATE##&enddate=##{2006-01-02;0;5}##&dosevalue=935000000'
+        method: "GET"
+      available_regexp: '"id": "[\d\w\-]+"'
+      unavailable_regexp: '[\s*]'      
+      num_appts_regexp: '"start":'
+  costco_issaquah_movie:
+    type: "standard_regexp"
+    api_key: "costco-2145"
+    params:
+      endpoint:
+        url: "https://book-costcopharmacy.appointment-plus.com/book-appointment/get-grid-hours?startTimestamp=##CURRENT_DATE##+12%3A21%3A05&endTimestamp=##NEXTMONTH_DATE##+00%3A00%3A00&limitNumberOfDaysWithOpenSlots=5&employeeId=&services%5B%5D=85&numberOfSpotsNeeded=1&isStoreHours=true&clientMasterId=429805&toTimeZone=false&fromTimeZone=132&_=##CURRENT_TIMESTAMP##"
+        method: "GET"
+      available_regexp: 'numberOfSpots'
+      unavailable_regexp: '"data":{"gridHours":\[\],"storeHours":\[\]}}'
+      num_appts_regexp: '"numberOfSpots":\[([\d,]+)\]'
+      num_appts_taken_regexp: '"numberOfSpotsTaken":\[([\d,]+)\]'      
+  bimart_fruitvale:
+    type: "standard_regexp"
+    api_key: "bimart_fruitvale"
+    params:
+      endpoint:
+        url: "https://book-ch.appointment-plus.com/book-appointment/get-grid-hours?startTimestamp=##CURRENT_DATE##+12%3A21%3A05&endTimestamp=##NEXTMONTH_DATE##+00%3A00%3A00&limitNumberOfDaysWithOpenSlots=5&employeeId=&numberOfSpotsNeeded=1&isStoreHours=true&clientMasterId=422665&toTimeZone=false&fromTimeZone=132&_=##CURRENT_TIMESTAMP##"
+        method: "GET"
+      available_regexp: 'numberOfSpots'
+      unavailable_regexp: '"data":{"gridHours":\[\],"storeHours":\[\]}}'
+      num_appts_regexp: '"numberOfSpots":\[([\d,]+)\]'
+      num_appts_taken_regexp: '"numberOfSpotsTaken":\[([\d,]+)\]'
+  bimart_ellensburg:
+    type: "standard_regexp"
+    api_key: "bimart_ellensburg"
+    params:
+      endpoint:
+        url: "https://book-ch.appointment-plus.com/book-appointment/get-grid-hours?startTimestamp=##CURRENT_DATE##+12%3A21%3A05&endTimestamp=##NEXTMONTH_DATE##+00%3A00%3A00&limitNumberOfDaysWithOpenSlots=5&employeeId=&numberOfSpotsNeeded=1&isStoreHours=true&clientMasterId=422661&toTimeZone=false&fromTimeZone=132&_=##CURRENT_TIMESTAMP##"
+        method: "GET"
+      available_regexp: 'numberOfSpots'
+      unavailable_regexp: '"data":{"gridHours":\[\],"storeHours":\[\]}}'
+      num_appts_regexp: '"numberOfSpots":\[([\d,]+)\]'
+      num_appts_taken_regexp: '"numberOfSpotsTaken":\[([\d,]+)\]'
+  bimart_yakima:
+    type: "standard_regexp"
+    api_key: "bimart_yakima"
+    params:
+      endpoint:
+        url: "https://book-ch.appointment-plus.com/book-appointment/get-grid-hours?startTimestamp=##CURRENT_DATE##+12%3A21%3A05&endTimestamp=##NEXTMONTH_DATE##+00%3A00%3A00&limitNumberOfDaysWithOpenSlots=5&employeeId=&numberOfSpotsNeeded=1&isStoreHours=true&clientMasterId=422633&toTimeZone=false&fromTimeZone=132&_=##CURRENT_TIMESTAMP##"
+        method: "GET"
+      available_regexp: 'numberOfSpots'
+      unavailable_regexp: '"data":{"gridHours":\[\],"storeHours":\[\]}}'
+      num_appts_regexp: '"numberOfSpots":\[([\d,]+)\]'
+      num_appts_taken_regexp: '"numberOfSpotsTaken":\[([\d,]+)\]'
+  bimart_sunnyside:
+    type: "standard_regexp"
+    api_key: "bimart_sunnyside"
+    params:
+      endpoint:
+        url: "https://book-ch.appointment-plus.com/book-appointment/get-grid-hours?startTimestamp=##CURRENT_DATE##+12%3A21%3A05&endTimestamp=##NEXTMONTH_DATE##+00%3A00%3A00&limitNumberOfDaysWithOpenSlots=5&employeeId=&numberOfSpotsNeeded=1&isStoreHours=true&clientMasterId=422673&toTimeZone=false&fromTimeZone=132&_=##CURRENT_TIMESTAMP##"
+        method: "GET"
+      available_regexp: 'numberOfSpots'
+      unavailable_regexp: '"data":{"gridHours":\[\],"storeHours":\[\]}}'
+      num_appts_regexp: '"numberOfSpots":\[([\d,]+)\]'
+      num_appts_taken_regexp: '"numberOfSpotsTaken":\[([\d,]+)\]'
+  bimart_wallawalla:
+    type: "standard_regexp"
+    api_key: "bimart_wallawalla"
+    params:
+      endpoint:
+        url: "https://book-ch.appointment-plus.com/book-appointment/get-grid-hours?startTimestamp=##CURRENT_DATE##+12%3A21%3A05&endTimestamp=##NEXTMONTH_DATE##+00%3A00%3A00&limitNumberOfDaysWithOpenSlots=5&employeeId=&numberOfSpotsNeeded=1&isStoreHours=true&clientMasterId=422657&toTimeZone=false&fromTimeZone=132&_=##CURRENT_TIMESTAMP##"
+        method: "GET"
+      available_regexp: 'numberOfSpots'
+      unavailable_regexp: '"data":{"gridHours":\[\],"storeHours":\[\]}}'
+      num_appts_regexp: '"numberOfSpots":\[([\d,]+)\]'
+      num_appts_taken_regexp: '"numberOfSpotsTaken":\[([\d,]+)\]'
+  bimart_cheney:
+    type: "standard_regexp"
+    api_key: "bimart_cheney" 
+    # &services%5B%5D=6629 for J&J, &services%5B%5D=4609
+    params:
+      endpoint:
+        url: "https://book-ch.appointment-plus.com/book-appointment/get-grid-hours?startTimestamp=##CURRENT_DATE##+12%3A21%3A05&endTimestamp=##NEXTMONTH_DATE##+00%3A00%3A00&limitNumberOfDaysWithOpenSlots=5&employeeId=&numberOfSpotsNeeded=1&isStoreHours=true&clientMasterId=422717&toTimeZone=false&fromTimeZone=132&_=##CURRENT_TIMESTAMP##"
+        method: "GET"
+      available_regexp: 'numberOfSpots'
+      unavailable_regexp: '"data":{"gridHours":\[\],"storeHours":\[\]}}'
+      num_appts_regexp: '"numberOfSpots":\[([\d,]+)\]'
+      num_appts_taken_regexp: '"numberOfSpotsTaken":\[([\d,]+)\]'
+  bimart_deerpark:
+    type: "standard_regexp"
+    api_key: "bimart_deerpark"
+    params:
+      endpoint:
+        url: "https://book-ch.appointment-plus.com/book-appointment/get-grid-hours?startTimestamp=##CURRENT_DATE##+12%3A21%3A05&endTimestamp=##NEXTMONTH_DATE##+00%3A00%3A00&limitNumberOfDaysWithOpenSlots=5&employeeId=&numberOfSpotsNeeded=1&isStoreHours=true&clientMasterId=422723&toTimeZone=false&fromTimeZone=132&_=##CURRENT_TIMESTAMP##"
+        method: "GET"
+      available_regexp: 'numberOfSpots'
+      unavailable_regexp: '"data":{"gridHours":\[\],"storeHours":\[\]}}'
+      num_appts_regexp: '"numberOfSpots":\[([\d,]+)\]'
+      num_appts_taken_regexp: '"numberOfSpotsTaken":\[([\d,]+)\]'
+  # medicineshoppe_shelton:
+  #   type: "multistage_regexp"
+  #   api_key: "medicineshoppe_shelton"
+  #   params:
+  #     default_status: "No"
+  #     stages:
+  #       - endpoint:
+  #           url: 'https://sheltonwa.medicineshoppe.com/covid-vaccine-information'
+  #           method: "GET"
+  #         next_url_regexp: '<a href="https://prepmod.doh.wa.gov(?:/+)(.+?)"'
+  #         recursion_type: "any"
+  #       - endpoint:
+  #           url: "https://prepmod.doh.wa.gov/##PREVIOUS##"
+  #           method: "GET"
+  #         unavailable_regexp: '(Clinic does not have any appointment slots available)|(Someone will contact you about your appointment)|(Deadline)|(This clinic is closed)|(errors\?message=)|(Please check back later)'
+  #         available_regexp: '[0-9]+\s+appointments available'
+  #         num_appts_regexp: '([0-9]+)\s+appointments available'
+  ostroms_drug:
+    type: "standard_regexp"
+    api_key: "ostroms_drug"
+    params:
+      endpoint:
+        url: "https://fs23.formsite.com/res/showFormEmbed?EParam=m_OmK8apOTBS9aNLxX7EUopEHaDzsK4NdgTYVfxeOgg&1605152382&EmbedId=1605152382"
+        method: "GET"
+      available_regexp: 'book an appointment|offering 1st dose appointments for the Moderna vaccine|currently offering'
+      unavailable_regexp: '(?i)No\s+appointments\s+available'
+  chas_scc_moderna1:
+    type: "standard_regexp"
+    api_key: "chas_scc_moderna1"
+    params:
+      endpoint:
+        url: "https://api.my-care-plan.com/public/time-slots?clinicId=369&startAt=##CURRENT_DATE##T07%3A00%3A00Z&finishAt=##NEXTMONTH_DATE##T06%3A59%3A59Z&departmentId=119875&providerId=374908&consultationTypeId=14038"
+        method: "GET"
+        headers:
+          authorization: "Basic MzNfMXptY2FidndqZmswOGswNGcwZ3cwNDA0NDg0MG9vODh3MHdvb2M0d2dnNDg0MG9vZzA6MTVqdDY0N3Blc3prdzgwa2dvczh3b3NvMGc0bzhra29rc284bzRjY3dnd29rODA0NDg="
+      unavailable_regexp: '\[\]'
+      available_regexp: '\[{"startTimestamp"'
+      num_appts_regexp: '"startTimestamp"'
+  chas_scc_moderna2:
+    type: "standard_regexp"
+    api_key: "chas_scc_moderna2"
+    params:
+      endpoint:
+        url: "https://api.my-care-plan.com/public/time-slots?clinicId=369&startAt=##CURRENT_DATE##T07%3A00%3A00Z&finishAt=##NEXTMONTH_DATE##T06%3A59%3A59Z&departmentId=119875&providerId=374909&consultationTypeId=14039"
+        method: "GET"
+        headers:
+          authorization: "Basic MzNfMXptY2FidndqZmswOGswNGcwZ3cwNDA0NDg0MG9vODh3MHdvb2M0d2dnNDg0MG9vZzA6MTVqdDY0N3Blc3prdzgwa2dvczh3b3NvMGc0bzhra29rc284bzRjY3dnd29rODA0NDg="
+      unavailable_regexp: '\[\]'
+      available_regexp: '\[{"startTimestamp"'
+      num_appts_regexp: '"startTimestamp"'
+  chas_scc_jnj:
+    type: "standard_regexp"
+    api_key: "chas_scc_jnj"
+    params:
+      endpoint:
+        url: "https://api.my-care-plan.com/public/time-slots?clinicId=369&startAt=##CURRENT_DATE##T07%3A00%3A00Z&finishAt=##NEXTMONTH_DATE##T06%3A59%3A59Z&departmentId=119875&providerId=374912&consultationTypeId=14395"
+        method: "GET"
+        headers:
+          authorization: "Basic MzNfMXptY2FidndqZmswOGswNGcwZ3cwNDA0NDg0MG9vODh3MHdvb2M0d2dnNDg0MG9vZzA6MTVqdDY0N3Blc3prdzgwa2dvczh3b3NvMGc0bzhra29rc284bzRjY3dnd29rODA0NDg="
+      unavailable_regexp: '\[\]'
+      available_regexp: '\[{"startTimestamp"'
+      num_appts_regexp: '"startTimestamp"'  
+  ec_sda_popup:
+    type: "standard_regexp"
+    api_key: "ec_sda_popup"
+    params:
+      endpoint:
+        url: "https://cmchcovidvaccinationpopup.as.me/schedule.php?action=showCalendar&fulldate=1&owner=22284341&template=class"
+        method: "POST"
+        body: "type=&calendar=&skip=true&options%5Bqty%5D=1&options%5BnumDays%5D=5&ignoreAppointment=&appointmentType=&calendarID="
+        headers:
+          Content-Type: "application/x-www-form-urlencoded"
+      unavailable_regexp: '(<div class="class-spots num-slots-available-container">\s*no <span id="spots-left-text">spots left</span>)|ended|No times are available|There are no appointment types available for scheduling|<div class="alert alert-danger">No'
+      available_regexp: '<div class="class-spots num-slots-available-container">\s*<span class="babel-ignore">\d+</span> <span id="spots-left-text">spots left</span>'
+      num_appts_regexp: '(?i)<div class="class-spots num-slots-available-container">\s*<span class="babel-ignore">(\d+)</span> <span id="spots-left-text">spots left</span>' 
+  rebel_med_nw:
+    type: "standard_regexp"
+    api_key: "rebel_med_nw"
+    params:
+      endpoint:
+        url: "https://ehr.charmtracker.com/publicCal.sas?method=fetchPhysicianSlots&PRACTICEID=9fac109f10b85efdcb87fccf67616526&FACILITY_ID=171006000000021061&PHYSICIAN_ID=171006000000147019&FROM_DATE=##CURRENT_DATE##&TO_DATE=##NEXTMONTH_DATE##&SLOT_INTERVAL=10&VISITTYPE_ID=171006000016170040"
+        method: "GET"
+      unavailable_regexp: '"available_slots":\[.*?{"\d{4}\-\d{2}\-\d{2}":\[\]}'
+      available_regexp: '"available_slots":\[(?:{"\d{4}\-\d{2}\-\d{2}":\[([\d\w]+?)\]})*(?:{"\d{4}\-\d{2}\-\d{2}":\[([\d\w]+?)\]})'
+      # num_appts_regexp: '{"\d{4}\-\d{2}\-\d{2}":\[[\d\w]+?\]}'
+  rebel_med_nw:
+    type: "standard_regexp"
+    api_key: "rebel_med_nw"
+    params:
+      endpoint:
+        url: "https://ehr.charmtracker.com/publicCal.sas?method=fetchPhysicianSlots&PRACTICEID=9fac109f10b85efdcb87fccf67616526&FACILITY_ID=171006000000021061&PHYSICIAN_ID=171006000000147019&FROM_DATE=##CURRENT_DATE##&TO_DATE=##{2006-01-02;0;7}##&SLOT_INTERVAL=10&VISITTYPE_ID=171006000016170040"
+        method: "GET"
+      unavailable_regexp: '"\d{4}\-\d{2}\-\d{2}":\s*\[\]'
+      available_regexp: '"start_time":"'
+      num_appts_regexp: '"start_time":"'
+  docere_center_greenlake:
+    type: "standard_regexp"
+    api_key: "docere_center_greenlake"
+    params:
+      endpoint:
+        url: "https://ehr.charmtracker.com/publicCal.sas?method=fetchPhysicianSlots&PRACTICEID=9fac109f10b85efde857818720bb0153&FACILITY_ID=45859000038162509&PHYSICIAN_ID=45859000000021019&FROM_DATE=##CURRENT_DATE##&TO_DATE=##{2006-01-02;0;7}##&SLOT_INTERVAL=10"
+        method: "GET"
+      unavailable_regexp: '"\d{4}\-\d{2}\-\d{2}":\s*\[\]'
+      available_regexp: '"start_time":"'
+      num_appts_regexp: '"start_time":"'     
+  issaquah_pharmacy_jnj:
+    type: "standard_regexp"
+    api_key: "issaquah_pharmacy_jnj"
+    params:
+      endpoint:
+        url: "https://booking.tipo.io/booking_api/slots?shop=issaquah-medical-center-pharmacy.myshopify.com&productId=6647112958107&variantId=39633334337691&locationId=&employeeId=&customerIds=undefined&currentDay=##CURRENT_DATE##+17%3A34"
+        method: "GET"
+      unavailable_regexp: '"\d{2}:\d{2}":1,'
+      available_regexp: '"\d{2}:\d{2}":0'
+      num_appts_regexp: '"\d{2}:\d{2}":0'    
+  issaquah_pharmacy_moderna:
+    type: "standard_regexp"
+    api_key: "issaquah_pharmacy_moderna"
+    params:
+      endpoint:
+        url: "https://booking.tipo.io/booking_api/slots?shop=issaquah-medical-center-pharmacy.myshopify.com&productId=6646882500763&variantId=39632471392411&locationId=&employeeId=&customerIds=undefined&currentDay=##CURRENT_DATE##+17%3A34"
+        method: "GET"
+      unavailable_regexp: '\[\]|"\d{2}:\d{2}":1'
+      available_regexp: '"\d{2}:\d{2}":0'
+      num_appts_regexp: '"\d{2}:\d{2}":0'    
+  issaquah_pharmacy_jnj:
+    type: "standard_regexp"
+    api_key: "issaquah_pharmacy_jnj"
+    params:
+      endpoint:
+        url: "https://booking.tipo.io/booking_api/slots?shop=issaquah-medical-center-pharmacy.myshopify.com&productId=6647112958107&variantId=39633334337691&locationId=&employeeId=&customerIds=undefined&currentDay=##CURRENT_DATE##+17%3A34"
+        method: "GET"
+      unavailable_regexp: '\[\]|"\d{2}:\d{2}":1'
+      available_regexp: '"\d{2}:\d{2}":0'
+      num_appts_regexp: '"\d{2}:\d{2}":0'    
+  zoomcare_everett:
+    type: "multistage_regexp"
+    api_key: "zoomcare_everett"
+    params:
+      stages:
+        - endpoint:
+            url: "https://api-prod.zoomcare.com/v1/schedule"
+            method: "POST"
+            body: '{"serviceLineIds":["13777419-82d1-42e4-8cb6-53092ec141e0"],"clinicId":"59f31b7b-2539-49c4-b310-5e8cfd30ad2d","providerId":null,"allClinics":false,"latLong":"(47.669165,-122.2892638)","page":1,"scheduleDate":1619420400000,"scheduleDateTimeZone":"America/Los_Angeles"}'
+            headers:
+              Content-Type: "application/json"
+          next_url_regexp: '"(?:nextAvailableDate|nextScheduleDateParam)":(\d+),'
+          available_regexp: '"slotTime":\d+'
+          num_appts_regexp: '"slotTime":\d+'    
+        - endpoint:
+            url: "https://api-prod.zoomcare.com/v1/schedule"
+            method: "POST"
+            body: '{"serviceLineIds":["13777419-82d1-42e4-8cb6-53092ec141e0"],"clinicId":"59f31b7b-2539-49c4-b310-5e8cfd30ad2d","providerId":null,"allClinics":false,"latLong":"(47.669165,-122.2892638)","page":1,"scheduleDate":##PREVIOUS##,"scheduleDateTimeZone":"America/Los_Angeles"}'
+            headers:
+              Content-Type: "application/json"
+          next_url_regexp: '"(?:nextAvailableDate|nextScheduleDateParam)":(\d+),'
+          available_regexp: '"slotTime":\d+'
+          num_appts_regexp: '"slotTime":\d+'          
+        - endpoint:
+            url: "https://api-prod.zoomcare.com/v1/schedule"
+            method: "POST"
+            body: '{"serviceLineIds":["13777419-82d1-42e4-8cb6-53092ec141e0"],"clinicId":"59f31b7b-2539-49c4-b310-5e8cfd30ad2d","providerId":null,"allClinics":false,"latLong":"(47.669165,-122.2892638)","page":1,"scheduleDate":##PREVIOUS##,"scheduleDateTimeZone":"America/Los_Angeles"}'
+            headers:
+              Content-Type: "application/json"
+          unavailable_regexp: '\[\]'    
+          available_regexp: '"slotTime":\d+'
+          num_appts_regexp: '"slotTime":\d+'
+  zoomcare_alderwood:
+    type: "multistage_regexp"
+    api_key: "zoomcare_alderwood"
+    params:
+      default_status: "No"
+      stages:
+        - endpoint:
+            url: "https://api-prod.zoomcare.com/v1/schedule"
+            method: "POST"
+            body: '{"serviceLineIds":["13777419-82d1-42e4-8cb6-53092ec141e0"],"clinicId":"6e2b2be6-2549-472a-b65a-d2d946514e25","providerId":null,"allClinics":false,"latLong":"(48.289771099999996,-122.5185074)","page":1,"scheduleDate":1620025200000,"scheduleDateTimeZone":"America/Los_Angeles"}'
+            headers:
+              Content-Type: "application/json"
+          next_url_regexp: '"(?:nextAvailableDate|nextScheduleDateParam)":(\d+),'
+          available_regexp: '"slotTime":\d+'
+          num_appts_regexp: '"slotTime":\d+'    
+        - endpoint:
+            url: "https://api-prod.zoomcare.com/v1/schedule"
+            method: "POST"
+            body: '{"serviceLineIds":["13777419-82d1-42e4-8cb6-53092ec141e0"],"clinicId":"6e2b2be6-2549-472a-b65a-d2d946514e25","providerId":null,"allClinics":false,"latLong":"(48.289771099999996,-122.5185074)","page":1,"scheduleDate":##PREVIOUS##,"scheduleDateTimeZone":"America/Los_Angeles"}'
+            headers:
+              Content-Type: "application/json"
+          next_url_regexp: '"(?:nextAvailableDate|nextScheduleDateParam)":(\d+),'
+          available_regexp: '"slotTime":\d+'
+          num_appts_regexp: '"slotTime":\d+'          
+        - endpoint:
+            url: "https://api-prod.zoomcare.com/v1/schedule"
+            method: "POST"
+            body: '{"serviceLineIds":["13777419-82d1-42e4-8cb6-53092ec141e0"],"clinicId":"6e2b2be6-2549-472a-b65a-d2d946514e25","providerId":null,"allClinics":false,"latLong":"(48.289771099999996,-122.5185074)","page":1,"scheduleDate":##PREVIOUS##,"scheduleDateTimeZone":"America/Los_Angeles"}'
+            headers:
+              Content-Type: "application/json"
+          unavailable_regexp: '\[\]'
+          available_regexp: '"slotTime":\d+'
+          num_appts_regexp: '"slotTime":\d+'
+  zoomcare_belltown:
+    type: "multistage_regexp"
+    api_key: "zoomcare_belltown"
+    params:
+      default_status: "No"
+      stages:
+        - endpoint:
+            url: "https://api-prod.zoomcare.com/v1/schedule"
+            method: "POST"
+            body: '{"serviceLineIds":["13777419-82d1-42e4-8cb6-53092ec141e0"],"clinicId":"e7c9a087-ad77-4122-a854-f6766905b6ba","providerId":null,"allClinics":false,"latLong":"(48.289749799999996,-122.51850359999999)","page":1,"scheduleDate":1619420400000,"scheduleDateTimeZone":"America/Los_Angeles"}'
+            headers:
+              Content-Type: "application/json"
+          next_url_regexp: '"(?:nextAvailableDate|nextScheduleDateParam)":(\d+),'
+          available_regexp: '"slotTime":\d+'
+          num_appts_regexp: '"slotTime":\d+'    
+        - endpoint:
+            url: "https://api-prod.zoomcare.com/v1/schedule"
+            method: "POST"
+            body: '{"serviceLineIds":["13777419-82d1-42e4-8cb6-53092ec141e0"],"clinicId":"e7c9a087-ad77-4122-a854-f6766905b6ba","providerId":null,"allClinics":false,"latLong":"(48.289749799999996,-122.51850359999999)","page":1,"scheduleDate":##PREVIOUS##,"scheduleDateTimeZone":"America/Los_Angeles"}'
+            headers:
+              Content-Type: "application/json"
+          next_url_regexp: '"(?:nextAvailableDate|nextScheduleDateParam)":(\d+),'        
+          available_regexp: '"slotTime":\d+'
+          num_appts_regexp: '"slotTime":\d+'        
+        - endpoint:
+            url: "https://api-prod.zoomcare.com/v1/schedule"
+            method: "POST"
+            body: '{"serviceLineIds":["13777419-82d1-42e4-8cb6-53092ec141e0"],"clinicId":"e7c9a087-ad77-4122-a854-f6766905b6ba","providerId":null,"allClinics":false,"latLong":"(48.289749799999996,-122.51850359999999)","page":1,"scheduleDate":##PREVIOUS##,"scheduleDateTimeZone":"America/Los_Angeles"}'
+            headers:
+              Content-Type: "application/json"
+          unavailable_regexp: '\[\]'    
+          available_regexp: '"slotTime":\d+'
+          num_appts_regexp: '"slotTime":\d+'
+  zoomcare_overlake:
+    type: "multistage_regexp"
+    api_key: "zoomcare_overlake"
+    params:
+      default_status: "No"
+      stages:
+        - endpoint:
+            url: "https://api-prod.zoomcare.com/v1/schedule"
+            method: "POST"
+            body: '{"serviceLineIds":["13777419-82d1-42e4-8cb6-53092ec141e0"],"clinicId":"ab4973c9-892b-43ae-9e18-de89d79c570a","providerId":null,"allClinics":false,"latLong":"(48.289749799999996,-122.51850359999999)","page":1,"scheduleDate":1619420400000,"scheduleDateTimeZone":"America/Los_Angeles"}'
+            headers:
+              Content-Type: "application/json"
+          next_url_regexp: '"(?:nextAvailableDate|nextScheduleDateParam)":(\d+),'
+          available_regexp: '"slotTime":\d+'
+          num_appts_regexp: '"slotTime":\d+'    
+        - endpoint:
+            url: "https://api-prod.zoomcare.com/v1/schedule"
+            method: "POST"
+            body: '{"serviceLineIds":["13777419-82d1-42e4-8cb6-53092ec141e0"],"clinicId":"ab4973c9-892b-43ae-9e18-de89d79c570a","providerId":null,"allClinics":false,"latLong":"(48.289749799999996,-122.51850359999999)","page":1,"scheduleDate":##PREVIOUS##,"scheduleDateTimeZone":"America/Los_Angeles"}'
+            headers:
+              Content-Type: "application/json"
+          next_url_regexp: '"(?:nextAvailableDate|nextScheduleDateParam)":(\d+),'
+          available_regexp: '"slotTime":\d+'
+          num_appts_regexp: '"slotTime":\d+'    
+        - endpoint:
+            url: "https://api-prod.zoomcare.com/v1/schedule"
+            method: "POST"
+            body: '{"serviceLineIds":["13777419-82d1-42e4-8cb6-53092ec141e0"],"clinicId":"ab4973c9-892b-43ae-9e18-de89d79c570a","providerId":null,"allClinics":false,"latLong":"(48.289749799999996,-122.51850359999999)","page":1,"scheduleDate":##PREVIOUS##,"scheduleDateTimeZone":"America/Los_Angeles"}'
+            headers:
+              Content-Type: "application/json"
+          unavailable_regexp: '\[\]'
+          available_regexp: '"slotTime":\d+'
+          num_appts_regexp: '"slotTime":\d+'
+  zoomcare_vancouver_mill:
+    type: "multistage_regexp"
+    api_key: "zoomcare_vancouver_mill"
+    params:
+      default_status: "No"
+      stages:
+        - endpoint:
+            url: "https://api-prod.zoomcare.com/v1/schedule"
+            method: "POST"
+            body: '{"serviceLineIds":["13777419-82d1-42e4-8cb6-53092ec141e0"],"clinicId":"5e7756e6-acd6-497c-96b8-809ce55e11d6","providerId":null,"allClinics":false,"latLong":"(48.2897374,-122.51842959999999)","page":1,"scheduleDate":1619420400000,"scheduleDateTimeZone":"America/Los_Angeles"}'
+            headers:
+              Content-Type: "application/json"
+          next_url_regexp: '"(?:nextAvailableDate|nextScheduleDateParam)":(\d+),'
+        - endpoint:
+            url: "https://api-prod.zoomcare.com/v1/schedule"
+            method: "POST"
+            body: '{"serviceLineIds":["13777419-82d1-42e4-8cb6-53092ec141e0"],"clinicId":"5e7756e6-acd6-497c-96b8-809ce55e11d6","providerId":null,"allClinics":false,"latLong":"(48.2897374,-122.51842959999999)","page":1,"scheduleDate":##PREVIOUS##,"scheduleDateTimeZone":"America/Los_Angeles"}'
+            headers:
+              Content-Type: "application/json"
+          next_url_regexp: '"(?:nextAvailableDate|nextScheduleDateParam)":(\d+),'
+          available_regexp: '"slotTime":\d+'
+          num_appts_regexp: '"slotTime":\d+'
+        - endpoint:
+            url: "https://api-prod.zoomcare.com/v1/schedule"
+            method: "POST"
+            body: '{"serviceLineIds":["13777419-82d1-42e4-8cb6-53092ec141e0"],"clinicId":"5e7756e6-acd6-497c-96b8-809ce55e11d6","providerId":null,"allClinics":false,"latLong":"(48.2897374,-122.51842959999999)","page":1,"scheduleDate":##PREVIOUS##,"scheduleDateTimeZone":"America/Los_Angeles"}'
+            headers:
+              Content-Type: "application/json"
+          unavailable_regexp: '"serviceLineId": "13777419-82d1-42e4-8cb6-53092ec141e0",(?:[.\s]+)clinics":\[\]'
+          available_regexp: '"slotTime":\s*\d+'
+          num_appts_regexp: '"slotTime":\s*\d+'
+  allegro_pediatrics:
+    type: "standard_regexp"
+    api_key: "allegro_pediatrics"
+    min_scrape_interval: 120 
+    params:
+      endpoint:
+        url: "https://z2-rpw.phreesia.net/SelfScheduling.Service/api/slots/load-day-slots?practiceId=0ad5b64a-6e60-473e-8d9d-2217b78c98f5&t=6e488d95-df21-4799-9531-eafc4fab3c1d"
+        method: "POST"
+        body: '{"flowType":2,"visitTypeId":"7d33ee2d-4998-426a-be7f-dcf4f7c15c28","visitTypeName":"COVID-19 Vaccine 1st Dose","locationIds":["f16555c1-45f6-4f61-a258-e840512d094d"],"providerIds":["5f5088ac-524d-4584-811b-dbef313bc487"],"previousTokenIds":[],"applyPrioritySearchForNewPatientFlow":false,"datesLocal":["##{2006-01-02;0;1}##","##{2006-01-02;0;2}##","##{2006-01-02;0;3}##","##{2006-01-02;0;4}##","##{2006-01-02;0;5}##","##{2006-01-02;0;6}##","##{2006-01-02;0;7}##"]}'
+        headers:
+          Content-Type: "application/json"
+      available_regexp: 'slotId'
+      unavailable_regexp: 'slots":\[\]'
+      num_appts_regexp: 'slotId'
+
+
+  # moved to SUG general scraper (python)
+  # switch type scrapers (multiple scraper types)
+  # kittitas:
+  #   type: "switch"
+  #   api_key: "kittitas_any"
+  #   params:
+  #     default_status: "No"
+  #     url: 'https://www.co.kittitas.wa.us/health/default.aspx'
+  #     list:
+  #       - switch_type: "jotform"
+  #         pattern: '(?i)https?://[^\.\s"]+\.jotform\.com/[^"''<]+'
+  #         auto_url: true
+  #       - switch_type: "solv_health"
+  #         pattern: 'solvhealth\.com/book-online/[^"]{6}'
+  #         auto_url: true
+  #       - switch_type: "signetic"
+  #         pattern: '(?i)https?://[^\.\s"]+\.signetic\.com/home(?:/[a-z0-9\-]*)?'
+  #         auto_url: true
+  #       - switch_type: "multistage_regexp" #prepmod direct
+  #         pattern: '(?i)https:(?:(?:\\u002F)|/){2}prepmod.doh.wa.gov(?:(?:\\u002F)|/)+reg(?:(?:\\u002F)|/)[0-9]+'
+  #         auto_url: true
+  #         params:
+  #           stages:
+  #             - endpoint:
+  #                 url: ""
+  #                 method: "GET"
+  #               next_url_regexp: 'https:(?:(?:\\u002F)|/){2}prepmod.doh.wa.gov(?:(?:\\u002F)|/)+reg(?:(?:\\u002F)|/)([0-9]+)'
+  #             - endpoint:
+  #                 url: "https://prepmod.doh.wa.gov/reg/##PREVIOUS##"
+  #                 method: "GET"
+  #               unavailable_regexp: '(?:No\s+appointments available){78,}|(Clinic does not have any appointment slots available)|(Someone will contact you about your appointment)|(Deadline)|(This clinic is closed)|(errors\?message=)|(Please check back later)'
+  #               available_regexp: '[0-9]+\s+appointments available'
+  #               num_appts_regexp: '([0-9]+)\s+appointments available'
+  #       - switch_type: "multistage_regexp" #signupgenius tabbed
+  #         pattern: '(?i)signupgenius.com/(go|tabs)/[0-9a-z\-]+"[^\n]+Make an appointment'
+  #         auto_url: true
+  #         params:
+  #           stages:
+  #             - endpoint:
+  #                 url: ""
+  #                 method: "GET"
+  #               next_url_regexp: '(?i)(https?://www.signupgenius.com/[\/0-9a-z\-]+)"[^\n]+Make an appointment'
+  #             - endpoint:
+  #                 url: '##PREVIOUS##'
+  #                 method: "GET"
+  #               next_url_regexp: '(?i)<a class="tabItem" href="#" onClick="javascript:checkFormChanges\(''([0-9a-z\-]+)''\)'
+  #               recursion_type: "any"
+  #             - endpoint:
+  #                 url: 'https://www.signupgenius.com/go/##PREVIOUS##'
+  #                 method: "GET"
+  #               unavailable_regexp: '(?i)(>NO SLOTS AVAILABLE. SIGN UP IS FULL.</h1>)|(<title>Oops! An Error.</title>)|(>The Sign Up Was Not Found<)|(sign up period for this event has ended)'
+  #               available_regexp: '(?i)<input type="submit" value="Submit and Sign Up" class="giantsubmitbutton rounded link_cursor">'
+
+#   tpchd_any:
+#     type: "switch"
+#     api_key: "tpchd_any"
+#     params:
+#       default_status: "No"
+#       url: 'https://www.tpchd.org/healthy-people/diseases/covid-19/covid-19-vaccine-information/'
+#       list:
+#         - switch_type: "solv_health"
+#           pattern: 'solvhealth\.com/book-online/[^"]{6}'
+#           auto_url: true
+#         - switch_type: "multistage_regexp"
+#           pattern: '(?i)https?://form.jotform.com/[0-9]+'
+#           auto_url: true
+#           params:
+#             stages:
+#               - endpoint:
+#                   url: ""
+#                   method: "GET"
+#                 recursion_type: "any"
+#                 next_url_regexp: '(?i)https?://form.jotform.com/[0-9]+'
+#               - endpoint:
+#                   url: "##PREVIOUS##"
+#                   method: "GET"
+#                 next_url_regexp: '(?i)https:(?:(?:\\u002F)|/){2}prepmod.doh.wa.gov(?:(?:\\u002F)|/)+reg(?:(?:\\u002F)|/)([0-9]+)'
+#               - endpoint:
+#                   url: "https://prepmod.doh.wa.gov/reg/##PREVIOUS##"
+#                   method: "GET"
+#                 unavailable_regexp: '(?:No\s+appointments available){78,}|(Clinic does not have any appointment slots available)|(Someone will contact you about your appointment)|(Deadline)|(This clinic is closed)|(errors\?message=)|(Please check back later)'
+#                 available_regexp: '[0-9]+\s+appointments available'
+
+  omlife_tacoma_popup:
+    type: "switch"
+    api_key: "omlife_tacoma_popup"
+    params:
+      default_status: "No"
+      url: 'https://covid19tacoma.com/'
+      crawl_depth: 2 #how many links deep to crawl, default: 0 (don't crawl)
+      crawl_external: false #follow links to external domains, default: false
+      crawl_ignore: '(lost-password)|(facility)|(cart)|(product-tag)|(my-account)|covid19tacoma.com/registernow|(volunteer)|(schools)|(\.pdf$)'
+      list:
+        - switch_type: "jotform"
+          pattern: '(?i)https?://[^\.\s"]+\.jotform\.com/[^"''<]+'
+          auto_url: true
+
+  # For testing
+
+  acme_test: # for integration testing
+    type: "standard_regexp"
+    api_key: "Acme"
+    min_scrape_interval: 999999999 #scrape once
+    params:
+      endpoint:
+        url: https://www.covidwa.com/
+        method: "GET"
+      unavailable_regexp: '.*<title>This title does not belong on the site</title>.*'
+
+  pliable_test:
+    type: "standard_regexp"
+    api_key: "pliable_test"
+    params:
+      endpoint:
+        url: "https://novelhealth.ai/practice/pliable-llc-903637"
+        method: "GET"
+      unavailable_regexp: "(?i)(clinic has been cancelled)|(check back later)"
+
+  bartells_test:
+    type: "standard_regexp"
+    api_key: "bartells_test"
+    params:
+      endpoint:
+        url: "https://www.bartelldrugs.com/covid-19-vaccine/"
+        method: "GET"
+      unavailable_regexp: '\s+<p>All appointments are full\. Please check back soon for updates.</p>'
+
+  #
+  # Signetic
+  #
+  signetic:
+    type: signetic
+    api_key: "##NAME##"
+
+  #
+  # Jotform
+  #
+  jotform:
+    type: jotform
+    api_key: "##NAME##"
+
+  #
+  # Prepmod Direct
+  #
+  prepmod:
+    type: prepmod
+    api_key: "##NAME##"
+
+  #
+  # SOLV
+  #
+  solv:
+    type: solv_health
+    api_key: "##NAME##"
+
+  #
+  # Zoho
+  #
+  zoho:
+    type: zoho
+    api_key: "##NAME##"
+
+  #
+  # Cognito
+  #
+  cognito:
+    type: cognito
+    api_key: "##NAME##"
+
+  #
+  # Wordpress SSA
+  #
+  wpssa:
+    type: wpssa
+    api_key: "##NAME##"
+
+  #
+  # Microsoft Outlook/Booking
+  #
+  msoutlook:
+    type: msoutlook
+    api_key: "##NAME##"
+
+  #
+  # Athena EMR
+  #
+  athena:
+    type: athena
+    api_key: "##NAME##"
+
+  #
+  # WA DOH
+  #
+  doh:
+    type: doh
+    api_key: "##NAME##"
+
+  #
+  # VaccineSpotter.org
+  #
+  vaccinespotter:
+    type: vaccinespotter
+    api_key: "##NAME##"
+    params:
+      endpoint: 
+        url: "https://www.vaccinespotter.org/api/v0/states/WA.json"
+        method: "GET"
+        headers:
+          Cache-Control: "no-cache"
+          Pragma: "no-cache"
+
+  #
+  # SimplyBook (Bartell Drugs)
+  #
+  simplybook:
+    type: simplybook
+    api_key: '##NAME##'
+
+  #
+  # FRED MEYER / QFC / KROGER
+  #
+  kroger:
+    type: kroger
+    api_key: "##NAME##"
+
+  #
+  # WALGREENS Direct
+  #
+  walgreens:
+    type: walgreens_direct
+    api_key: "##NAME##"
+
+  #
+  # Wally World
+  #
+  walmart:
+    type: walmart
+    api_key: "##NAME##"
+
+  #
+  # CVS
+  #
+  cvs:
+    type: "cvs"
+    api_key: "##NAME##"

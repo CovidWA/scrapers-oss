@@ -1,0 +1,77 @@
+---
+#
+# configuration for ci tests
+#
+debug: true # additional debug output
+test_mode: true # if set to true no api calls will be made to covidwa
+poll_interval: 30 # default scrape interval (seconds)
+api_interval: 180 # interval to send updates to the covidwa api.  Note that any detected changes in status will trigger an update immediately.
+api_url: "https://api.covidwa.com/v1/updater"
+api_internal_url: "https://api.covidwa.com/v1/get_internal"
+from_email_address: "" # from address field for notification emails
+smtp_host: "smtp.gmail.com" # smtp info for notification emails
+smtp_port: 587
+smtp_user: ""
+smtp_pass: ""
+error_warning_threshold: 3 # when error count exceeds this, send email
+notify_email_addrs: 
+  - "email1@gmail.com" # list of emails to notify for changes/errors
+  - "email2@gmail.com"
+notify_on_change: true # send email notification when status changes
+notify_on_error: true # send email notification when there are n errors in a row (configured in error_warning_threshold)
+dump_output: true # output unique scrape results to file
+dump_output_s3: true # send unique scrape results to s3
+dump_dir: "out" # directory to dump scraper html/json/xml output, this must be configured
+limited_threshold: 5 #default number of appointments above which the scraper should return available instead of limited
+scraper_configs:
+  acme_test: # for integration testing
+    type: "standard_regexp"
+    api_key: "Acme"
+    min_scrape_interval: 999999999 #scrape once
+    params:
+      endpoint:
+        url: https://www.covidwa.com/
+        method: "GET"
+      unavailable_regexp: '.*<title>This title does not belong on the site</title>.*'
+  
+  #
+  # SOLV Airtable
+  #
+  solv:
+    type: "solv_health"
+    api_key: "##NAME##"
+
+  #
+  # Signetic
+  #
+  signetic:
+    type: "signetic"
+    api_key: "##NAME##"
+
+  #
+  # Jotform
+  #
+  jotform:
+    type: "jotform"
+    api_key: "##NAME##"
+
+  #
+  # Zoho
+  #
+  zoho:
+    type: "zoho"
+    api_key: "##NAME##"
+
+  #
+  # Cognito
+  #
+  cognito:
+    type: cognito
+    api_key: "##NAME##"
+
+  #
+  # Microsoft
+  #
+  msoutlook:
+    type: msoutlook
+    api_key: "##NAME##"

@@ -1,0 +1,15 @@
+{
+  "editor.tabSize": 2,
+  "eslint.format.enable": true,
+  "eslint.workingDirectories": [
+    "./typescript",
+  ],
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "python.autoComplete.extraPaths": [
+                "./**",
+                "./python"
+		              ],
+  "python.pythonPath": "python/covidwa_env/bin/python3",
+}

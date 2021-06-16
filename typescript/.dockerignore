@@ -1,0 +1,9 @@
+.*
+bin/
+build/
+config.json.sample
+devops/
+dockersecrets.sh
+dump/
+node_modules/
+test/

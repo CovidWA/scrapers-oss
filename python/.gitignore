@@ -1,0 +1,10 @@
+__pycache__
+covidwa_env
+.env
+package
+lambda_stage/*
+.vscode
+
+# pytest ignore not sure what .coverage is
+junit
+.coverage

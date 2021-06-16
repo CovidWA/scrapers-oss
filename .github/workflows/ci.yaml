@@ -1,0 +1,141 @@
+# Copyright 2021 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http:#www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Compile and Test and Deploy
+
+on:
+  push:
+    branches:
+      - "**"
+
+env:
+  AWS_REGION: us-west-2
+  GO_VERSION: 1.15.x
+
+jobs:
+  TypeScript:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [14.x]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: cp config.json.sample config.json
+        working-directory: typescript
+      - run: cp mhealth_credentials.json.sample mhealth_credentials.json
+        working-directory: typescript
+      - run: npm install
+        working-directory: typescript
+      # - run: npm test
+      #   working-directory: typescript
+
+  Golang-Yaml-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: yaml-lint
+        uses: ibiqlik/action-yamllint@v3
+        with:
+          file_or_dir: .
+          config_file: .github/yaml-lint-config.yml
+
+  Golang:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    steps:
+      - name: Setup Go ${{ env.GO_VERSION }}
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - uses: actions/checkout@v2
+      - run: $GOROOT/bin/go get ./...
+        working-directory: golang
+      - run: $GOROOT/bin/go version
+        working-directory: golang
+      - run: $GOROOT/bin/go vet
+        working-directory: golang
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: v1.29
+          working-directory: golang
+      - run: |
+          rm covidwa-scrapers.yaml
+          mv covidwa-scrapers-test.yaml covidwa-scrapers.yaml
+        working-directory: golang
+      # - run: $GOROOT/bin/go test ./...
+      #   working-directory: golang
+      - run: $GOROOT/bin/go install ./...
+        working-directory: golang
+      # - run: covidwa-scrapers-go once
+      #   working-directory: golang
+      # - run: ls ./out/acme_test.*
+      #   working-directory: golang
+
+  deploy-scrapers:
+    if: github.ref == 'refs/heads/main'
+    name: Deploy scrapers to lambda
+    needs: [TypeScript, Golang-Yaml-config, Golang]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14.x
+      - name: Use Go ${{ env.GO_VERSION }}
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: Use Python 3.8.x
+        uses: actions/setup-python@v2
+        with:
+            python-version : '3.8.x'
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      - run: |
+          aws secretsmanager get-secret-value --secret-id ScraperConfig --query SecretString --output text > config.json
+        working-directory: typescript
+      - name: Build Python Scraper and stage locally
+        run: ./build.sh
+        working-directory: python/bin
+      - name: Build Golang Scraper and stage locally
+        run: ./stage-lambda.sh
+        working-directory: golang/cmd/covidwa-scrapers-go-lambda
+      - name: Deploy All via CDK
+        uses: youyo/aws-cdk-github-actions@v2
+        with:
+          actions_comment: false
+          cdk_args: "--require-approval never"
+          cdk_stack: "DevopsStack"
+          cdk_subcommand: "deploy"
+          debug_log: true
+          working_dir: devops
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_DEFAULT_REGION: ${{ env.AWS_REGION }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          DOCKER_IMAGE_TAG: typescript-scrapers-${{ github.sha }}

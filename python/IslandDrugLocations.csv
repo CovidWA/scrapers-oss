@@ -1,0 +1,4 @@
+Location,URL,Href_Value,Key,FailureCase
+Island Drug - Oak Harbor,https://islanddrug.com/appt/,"oak harbor",island_drug_oakharbor,"does not have any appointment slots"
+Island Drug - Clinton,https://islanddrug.com/appt/,"clinton",island_drug_clinton,"does not have any appointment slots"
+Island Drug - La Conner Drug,https://islanddrug.com/appt/,"conner",island_drug_laconner,"does not have any appointment slots"

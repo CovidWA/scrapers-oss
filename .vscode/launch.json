@@ -1,0 +1,74 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "pwa-node",
+      "request": "launch",
+      "name": "TypeScript scrapers",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "program": "${workspaceFolder}/typescript/src/index.ts",
+      "preLaunchTask": "tsc: build - typescript/tsconfig.json",
+      "outFiles": [
+        "${workspaceFolder}/typescript/build/**/*.js"
+      ],
+      "cwd": "${workspaceFolder}/typescript"
+    },
+    {
+      "type": "pwa-node",
+      "request": "launch",
+      "name": "Test Individual Scraper",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "program": "${workspaceFolder}/typescript/test/index.ts",
+      "preLaunchTask": "tsc: build - typescript/tsconfig.json",
+      "outFiles": [
+        "${workspaceFolder}/typescript/build/**/*.js"
+      ],
+      "args": [
+        "${fileBasenameNoExtension}"
+      ],
+      "env": { "DEBUG": "true" },
+      "cwd": "${workspaceFolder}/typescript",
+      "console": "integratedTerminal"
+    },
+    {
+      "type": "pwa-node",
+      "request": "launch",
+      "name": "Test Albertsons Experimental Scraper",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "program": "${workspaceFolder}/typescript/test/albertsonsRunner.ts",
+      "preLaunchTask": "tsc: build - typescript/tsconfig.json",
+      "outFiles": [
+        "${workspaceFolder}/typescript/build/**/*.js"
+      ],
+      "env": { "DEBUG": "true" },
+      "cwd": "${workspaceFolder}/typescript",
+      "console": "integratedTerminal"
+    },
+    {
+      "type": "pwa-node",
+      "request": "launch",
+      "name": "TypeScript scrapers in debug mode",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "program": "${workspaceFolder}/typescript/src/index.ts",
+      "preLaunchTask": "tsc: build - typescript/tsconfig.json",
+      "outFiles": [
+        "${workspaceFolder}/typescript/build/**/*.js"
+      ],
+      "env": {
+        "DEBUG": "true"
+      },
+      "cwd": "${workspaceFolder}/typescript"
+    }
+  ]
+}
